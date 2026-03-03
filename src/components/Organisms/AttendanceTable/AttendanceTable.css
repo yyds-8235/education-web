@@ -1,0 +1,56 @@
+.attendance-table {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.attendance-table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4);
+    background-color: var(--color-bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.toolbar-left {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.toolbar-right {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.attendance-data-table {
+    background-color: var(--color-bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.attendance-data-table .ant-table-thead>tr>th {
+    background-color: var(--color-bg-secondary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.attendance-data-table .ant-table-tbody>tr:hover>td {
+    background-color: var(--color-bg-hover);
+}
+
+.exception-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.exception-note-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.exception-note-input label {
+    font-weight: var(--font-weight-medium);
+}

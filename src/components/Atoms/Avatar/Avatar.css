@@ -1,0 +1,9 @@
+.custom-avatar {
+    background-color: var(--color-primary);
+    color: white;
+    font-weight: var(--font-weight-medium);
+}
+
+.custom-avatar img {
+    object-fit: cover;
+}

@@ -1,0 +1,56 @@
+.custom-button {
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-base);
+    transition: all var(--transition-fast);
+}
+
+.custom-button--full-width {
+    width: 100%;
+}
+
+.custom-button--primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.custom-button--primary:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+.custom-button--secondary {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+}
+
+.custom-button--secondary:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.custom-button--ghost {
+    background-color: transparent;
+    color: var(--color-text-secondary);
+}
+
+.custom-button--ghost:hover:not(:disabled) {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+.custom-button--link {
+    padding: 0;
+    height: auto;
+    background: transparent;
+    border: none;
+    color: var(--color-primary);
+}
+
+.custom-button--link:hover:not(:disabled) {
+    color: var(--color-primary-hover);
+}
+
+.button-icon-right {
+    margin-left: var(--space-2);
+}

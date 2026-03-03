@@ -1,0 +1,16 @@
+.main-layout {
+    min-height: 100vh;
+}
+
+.main-layout-content-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg-secondary);
+}
+
+.main-layout-content {
+    flex: 1;
+    padding: var(--space-6);
+    overflow: auto;
+}

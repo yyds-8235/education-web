@@ -1,0 +1,37 @@
+.course-list-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.page-toolbar {
+    background-color: var(--color-bg-primary);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.course-list-content {
+    min-height: 400px;
+}
+
+.page-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-4);
+    color: var(--color-text-secondary);
+}

@@ -1,0 +1,139 @@
+.course-card {
+    background-color: var(--color-bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-base);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.course-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.course-card-cover {
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+}
+
+.course-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.course-card-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    font-size: 48px;
+    color: white;
+}
+
+.course-card-status {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+}
+
+.course-card-content {
+    padding: var(--space-4);
+}
+
+.course-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-2);
+}
+
+.course-card-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.course-card-more {
+    background: none;
+    border: none;
+    padding: var(--space-1);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    border-radius: var(--radius-base);
+    transition: all var(--transition-fast);
+}
+
+.course-card-more:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+.course-card-description {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    margin: 0 0 var(--space-3) 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    min-height: 40px;
+}
+
+.course-card-meta {
+    display: flex;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.course-card-subject {
+    font-size: var(--font-size-sm);
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+.course-card-grade {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.course-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.course-card-teacher {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.course-card-stats {
+    display: flex;
+    gap: var(--space-3);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+.course-card-stats span {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}

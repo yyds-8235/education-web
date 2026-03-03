@@ -1,0 +1,75 @@
+.date-picker-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.date-picker-label {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+}
+
+.date-picker--small {
+    font-size: var(--font-size-sm);
+}
+
+.date-picker--medium {
+    font-size: var(--font-size-base);
+}
+
+.date-picker--large {
+    font-size: var(--font-size-lg);
+}
+
+.date-picker--full-width {
+    width: 100%;
+}
+
+.custom-date-picker {
+    border-radius: var(--radius-base);
+}
+
+.custom-date-picker .ant-picker {
+    border-radius: var(--radius-base);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-primary);
+    transition: all var(--transition-fast);
+}
+
+.custom-date-picker.ant-picker:hover:not(.date-picker--disabled) {
+    border-color: var(--color-border-secondary);
+}
+
+.custom-date-picker.ant-picker-focused {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.date-picker--error .ant-picker {
+    border-color: var(--color-error);
+}
+
+.date-picker--error.ant-picker-focused .ant-picker {
+    box-shadow: 0 0 0 3px var(--color-error-light);
+}
+
+.date-picker--disabled .ant-picker {
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+}
+
+.date-picker-error {
+    font-size: var(--font-size-sm);
+    color: var(--color-error);
+}
+
+.date-picker-hint {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+.custom-date-range-picker {
+    width: 100%;
+}

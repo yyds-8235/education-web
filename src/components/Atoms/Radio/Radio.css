@@ -1,0 +1,38 @@
+.custom-radio {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.custom-radio .ant-radio-inner {
+    border-color: var(--color-border);
+}
+
+.custom-radio:hover .ant-radio-inner {
+    border-color: var(--color-primary);
+}
+
+.custom-radio .ant-radio-checked .ant-radio-inner {
+    border-color: var(--color-primary);
+}
+
+.custom-radio .ant-radio-checked .ant-radio-inner::after {
+    background-color: var(--color-primary);
+}
+
+.custom-radio .ant-radio-disabled .ant-radio-inner {
+    background-color: var(--color-bg-tertiary);
+    border-color: var(--color-border);
+}
+
+.radio-label {
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+}
+
+.radio-description {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    margin-top: var(--space-1);
+}

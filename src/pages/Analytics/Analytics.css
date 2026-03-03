@@ -1,0 +1,41 @@
+.analytics-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.stat-card {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card .ant-statistic-title {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.stat-card .ant-statistic-content {
+    font-size: var(--font-size-2xl);
+}
+
+.charts-row {
+    margin-top: var(--space-4);
+}
+
+.chart-card {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}

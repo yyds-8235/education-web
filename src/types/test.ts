@@ -45,6 +45,9 @@ export interface TestSubmission {
     status: 'draft' | 'submitted' | 'graded';
     submittedAt?: string;
     gradedAt?: string;
+    appealReason?: string;
+    appealStatus?: 'pending' | 'accepted' | 'rejected';
+    analysisSummary?: string;
     createdAt: string;
 }
 
@@ -64,6 +67,9 @@ export interface TestStatistics {
     lowestScore: number;
     passRate: number;
     questionStats: QuestionStatistics[];
+    wrongDistribution: Array<{ questionId: string; content: string; wrongRate: number }>;
+    learningBrief: string;
+    adaptiveRecommendations: string[];
 }
 
 export interface QuestionStatistics {
@@ -91,6 +97,10 @@ export interface SubmitTestParams {
 export interface GradeParams {
     submissionId: string;
     answers: { questionId: string; score: number; feedback?: string }[];
+}
+
+export interface BatchGradeObjectiveParams {
+    testId: string;
 }
 
 export interface AppealParams {

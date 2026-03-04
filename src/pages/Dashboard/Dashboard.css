@@ -1,18 +1,21 @@
-.dashboard-page {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
+﻿.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.dashboard-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.page-title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin: 0;
+.dashboard-card {
+  border-radius: 12px;
+}
+
+.dashboard-step {
+  width: 24px;
+  color: #2563eb;
+  font-weight: 600;
 }

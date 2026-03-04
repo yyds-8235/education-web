@@ -1,99 +1,167 @@
-import { useNavigate } from 'react-router-dom';
-import { Dropdown, Avatar, Space } from 'antd';
+﻿import type { ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Avatar, Dropdown, Menu, Space, Tag } from 'antd';
 import {
-    UserOutlined,
-    SettingOutlined,
-    LogoutOutlined,
-    BellOutlined,
-    QuestionCircleOutlined,
+  AuditOutlined,
+  BarChartOutlined,
+  BookOutlined,
+  CalendarOutlined,
+  DashboardOutlined,
+  ExperimentOutlined,
+  LogoutOutlined,
+  TeamOutlined,
+  UserOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { logout } from '@/store/slices/authSlice';
 import type { MenuProps } from 'antd';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logout } from '@/store/slices/authSlice';
+import type { UserRole } from '@/types';
 import './Header.css';
 
-const Header = () => {
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch();
-    const { user } = useAppSelector((state) => state.auth);
+interface TopMenuItem {
+  key: string;
+  label: string;
+  icon: ReactNode;
+  roles: UserRole[];
+}
 
-    const handleLogout = () => {
+const topMenus: TopMenuItem[] = [
+  {
+    key: '/',
+    label: '工作台',
+    icon: <DashboardOutlined />,
+    roles: ['teacher', 'student', 'admin'],
+  },
+  {
+    key: '/courses',
+    label: '课程系统',
+    icon: <BookOutlined />,
+    roles: ['teacher', 'student'],
+  },
+  {
+    key: '/students',
+    label: '学生管理',
+    icon: <TeamOutlined />,
+    roles: ['teacher', 'admin'],
+  },
+  {
+    key: '/schedule',
+    label: '课程表管理',
+    icon: <CalendarOutlined />,
+    roles: ['admin'],
+  },
+  {
+    key: '/attendance',
+    label: '考勤管理',
+    icon: <AuditOutlined />,
+    roles: ['admin'],
+  },
+  {
+    key: '/analytics',
+    label: '数据分析',
+    icon: <BarChartOutlined />,
+    roles: ['admin'],
+  },
+  {
+    key: '/classroom',
+    label: '授课系统',
+    icon: <VideoCameraOutlined />,
+    roles: ['teacher', 'student'],
+  },
+  {
+    key: '/tests',
+    label: '测试系统',
+    icon: <ExperimentOutlined />,
+    roles: ['teacher', 'student'],
+  },
+];
+
+const Header = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+
+  const roleLabel =
+    user?.role === 'teacher'
+      ? '教师端'
+      : user?.role === 'student'
+        ? '学生端'
+        : user?.role === 'admin'
+          ? '教务处'
+          : '未登录';
+
+  const roleTagColor =
+    user?.role === 'teacher' ? 'blue' : user?.role === 'student' ? 'green' : 'gold';
+
+  const visibleMenus = topMenus.filter((menu) => (user ? menu.roles.includes(user.role) : false));
+
+  const selectedMenu =
+    visibleMenus.find((menu) => {
+      if (menu.key === '/') {
+        return location.pathname === '/';
+      }
+
+      return location.pathname.startsWith(menu.key);
+    })?.key ?? '/';
+
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      onClick: () => {
         dispatch(logout());
         navigate('/login');
-    };
+      },
+      danger: true,
+    },
+  ];
 
-    const userMenuItems: MenuProps['items'] = [
-        {
-            key: 'profile',
-            icon: <UserOutlined />,
-            label: '个人中心',
-            onClick: () => navigate('/profile'),
-        },
-        {
-            key: 'settings',
-            icon: <SettingOutlined />,
-            label: '账号设置',
-            onClick: () => navigate('/settings'),
-        },
-        {
-            type: 'divider',
-        },
-        {
-            key: 'logout',
-            icon: <LogoutOutlined />,
-            label: '退出登录',
-            onClick: handleLogout,
-            danger: true,
-        },
-    ];
+  return (
+    <header className="header">
+      <div className="header-inner">
+        <div className="header-brand">
+          <div className="platform-title">智能教学平台</div>
+        </div>
 
-    const getRoleName = () => {
-        switch (user?.role) {
-            case 'teacher':
-                return '教师';
-            case 'student':
-                return '学生';
-            case 'admin':
-                return '管理员';
-            default:
-                return '';
-        }
-    };
+        <div className="header-nav">
+          <Menu
+            mode="horizontal"
+            selectedKeys={[selectedMenu]}
+            items={visibleMenus.map((menu) => ({
+              key: menu.key,
+              icon: menu.icon,
+              label: menu.label,
+            }))}
+            onClick={({ key }) => navigate(key)}
+            className="top-nav-menu"
+          />
+        </div>
 
-    return (
-        <header className="header">
-            <div className="header-left">
-                <div className="breadcrumb">
-                    <span>首页</span>
+        <div className="header-account">
+          <Space size="middle">
+            <Tag color={roleTagColor}>{roleLabel}</Tag>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+              <div className="header-user">
+                <Avatar
+                  size={36}
+                  src={user?.avatar}
+                  icon={!user?.avatar && <UserOutlined />}
+                  className="user-avatar"
+                />
+                <div className="user-info">
+                  <span className="user-name">{user?.realName ?? user?.username}</span>
+                  <span className="user-role">{user?.username}</span>
                 </div>
-            </div>
-            <div className="header-right">
-                <Space size="middle">
-                    <button className="header-icon-btn" aria-label="帮助">
-                        <QuestionCircleOutlined />
-                    </button>
-                    <button className="header-icon-btn" aria-label="通知">
-                        <BellOutlined />
-                        <span className="notification-badge" />
-                    </button>
-                    <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-                        <div className="header-user">
-                            <Avatar
-                                size={36}
-                                src={user?.avatar}
-                                icon={!user?.avatar && <UserOutlined />}
-                                className="user-avatar"
-                            />
-                            <div className="user-info">
-                                <span className="user-name">{user?.realName || user?.username}</span>
-                                <span className="user-role">{getRoleName()}</span>
-                            </div>
-                        </div>
-                    </Dropdown>
-                </Space>
-            </div>
-        </header>
-    );
+              </div>
+            </Dropdown>
+          </Space>
+        </div>
+      </div>
+    </header>
+  );
 };
 
 export default Header;

@@ -42,7 +42,10 @@ request.interceptors.response.use(
       return Promise.reject(new Error(res.message || '请求失败'));
     }
 
-    return res as any;
+    return {
+      ...response,
+      data: res,
+    };
   },
   (error) => {
     console.error('请求错误：', error);

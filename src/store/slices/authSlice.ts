@@ -1,85 +1,132 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { User, LoginParams, AuthState } from '@/types';
-import request from '@/utils/request';
+﻿import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import type { AuthState, LoginParams, User } from '@/types';
+import { mockCredentials, mockUsers } from '@/mock/users';
 
-const initialState: AuthState = {
-    user: null,
-    token: localStorage.getItem('token'),
-    isAuthenticated: false,
-    loading: false,
+const TOKEN_KEY = 'token';
+const USER_KEY = 'userInfo';
+
+const readPersistedUser = (): User | null => {
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
 };
 
-export const login = createAsyncThunk(
-    'auth/login',
-    async (params: LoginParams) => {
-        const response = await request.post<{ token: string; user: User; expiresIn: number }>(
-            '/auth/login',
-            params
-        );
-        return response.data;
-    }
-);
+const persistedUser = readPersistedUser();
+const persistedToken = localStorage.getItem(TOKEN_KEY);
 
-export const fetchCurrentUser = createAsyncThunk(
-    'auth/fetchCurrentUser',
-    async () => {
-        const response = await request.get<User>('/auth/me');
-        return response.data;
-    }
-);
+const initialState: AuthState = {
+  user: persistedUser,
+  token: persistedToken,
+  isAuthenticated: Boolean(persistedUser && persistedToken),
+  loading: false,
+};
+
+export const login = createAsyncThunk('auth/login', async (params: LoginParams) => {
+  const credential = mockCredentials.find(
+    (item) => item.username === params.username && item.password === params.password
+  );
+
+  if (!credential) {
+    throw new Error('用户名或密码错误');
+  }
+
+  const user = mockUsers.find((item) => item.id === credential.userId);
+  if (!user) {
+    throw new Error('账号不存在');
+  }
+
+  return {
+    token: `mock-token-${user.id}`,
+    user,
+    expiresIn: 60 * 60 * 24,
+  };
+});
+
+export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) {
+    throw new Error('未登录');
+  }
+
+  const persisted = readPersistedUser();
+  if (persisted) {
+    return persisted;
+  }
+
+  const userId = token.replace('mock-token-', '');
+  const user = mockUsers.find((item) => item.id === userId);
+  if (!user) {
+    throw new Error('账号不存在');
+  }
+
+  return user;
+});
 
 const authSlice = createSlice({
-    name: 'auth',
-    initialState,
-    reducers: {
-        setToken: (state, action) => {
-            state.token = action.payload;
-            localStorage.setItem('token', action.payload);
-        },
-        setUser: (state, action) => {
-            state.user = action.payload;
-            state.isAuthenticated = true;
-        },
-        logout: (state) => {
-            state.user = null;
-            state.token = null;
-            state.isAuthenticated = false;
-            localStorage.removeItem('token');
-        },
-        setLoading: (state, action) => {
-            state.loading = action.payload;
-        },
+  name: 'auth',
+  initialState,
+  reducers: {
+    setToken: (state, action) => {
+      state.token = action.payload;
+      localStorage.setItem(TOKEN_KEY, action.payload);
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase(login.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(login.fulfilled, (state, action) => {
-                state.loading = false;
-                state.token = action.payload.token;
-                state.user = action.payload.user;
-                state.isAuthenticated = true;
-                localStorage.setItem('token', action.payload.token);
-            })
-            .addCase(login.rejected, (state) => {
-                state.loading = false;
-            })
-            .addCase(fetchCurrentUser.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-                state.loading = false;
-                state.user = action.payload;
-                state.isAuthenticated = true;
-            })
-            .addCase(fetchCurrentUser.rejected, (state) => {
-                state.loading = false;
-                state.token = null;
-                state.isAuthenticated = false;
-                localStorage.removeItem('token');
-            });
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+      localStorage.setItem(USER_KEY, JSON.stringify(action.payload));
     },
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(login.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.loading = false;
+        state.token = action.payload.token;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        localStorage.setItem(TOKEN_KEY, action.payload.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(action.payload.user));
+      })
+      .addCase(login.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        localStorage.setItem(USER_KEY, JSON.stringify(action.payload));
+      })
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+      });
+  },
 });
 
 export const { setToken, setUser, logout, setLoading } = authSlice.actions;

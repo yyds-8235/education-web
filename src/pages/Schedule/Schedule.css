@@ -1,18 +1,139 @@
 .schedule-page {
-    display: flex;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.schedule-title {
+  margin: 0 !important;
+}
+
+.schedule-grid-card .ant-card-body {
+  padding: 0;
+}
+
+.schedule-grid-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.schedule-grid-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.schedule-grid-table th,
+.schedule-grid-table td {
+  border: 1px solid var(--color-border);
+}
+
+.schedule-grid-table thead th {
+  background: var(--color-bg-secondary);
+  text-align: center;
+  height: 48px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.period-head {
+  width: 170px;
+}
+
+.period-cell {
+  width: 170px;
+  background: var(--color-bg-secondary);
+  text-align: center;
+  padding: 8px 6px;
+}
+
+.period-index {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.period-time {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.schedule-cell-button {
+  width: 100%;
+  min-height: 90px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.schedule-cell-button:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.schedule-cell-button.is-filled:hover {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.schedule-course {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.schedule-subject {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.schedule-meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.schedule-empty {
+  min-height: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.schedule-cell-plus {
+  font-size: 24px;
+  line-height: 1;
+  color: #2563eb;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.schedule-cell-button:hover .schedule-cell-plus {
+  opacity: 1;
+}
+
+.schedule-filter-tip {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.schedule-modal-meta {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+  .schedule-header {
     flex-direction: column;
-    gap: var(--space-6);
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.page-title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin: 0;
+  }
 }

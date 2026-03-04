@@ -1,86 +1,105 @@
-import React, { useState } from 'react';
-import { Form, message } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+﻿import { useEffect, useState } from 'react';
+import { Alert, Button, Card, Form, Input, Space, Typography, message } from 'antd';
+import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
-import { Button, Input } from '@/components/Atoms';
 import './Login.css';
 
-const Login: React.FC = () => {
-    const [loading, setLoading] = useState(false);
-    const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+const { Title, Text } = Typography;
 
-    const handleSubmit = async (values: { username: string; password: string }) => {
-        setLoading(true);
-        try {
-            await dispatch(login(values)).unwrap();
-            message.success('登录成功');
-            navigate('/');
-        } catch {
-            message.error('登录失败，请检查用户名和密码');
-        } finally {
-            setLoading(false);
-        }
-    };
+const demoAccounts = [
+  { label: '教务处账号', username: 'admin', password: '123456' },
+  { label: '教师账号', username: 'teacher01', password: '123456' },
+  { label: '学生账号', username: 'student01', password: '123456' },
+];
 
-    return (
-        <div className="login-page">
-            <div className="login-container">
-                <div className="login-header">
-                    <h1 className="login-title">智慧教学平台</h1>
-                    <p className="login-subtitle">Smart Teaching Platform</p>
-                </div>
+const Login = () => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-                <Form
-                    className="login-form"
-                    onFinish={handleSubmit}
-                    autoComplete="off"
-                    size="large"
-                >
-                    <Form.Item
-                        name="username"
-                        rules={[{ required: true, message: '请输入用户名' }]}
-                    >
-                        <Input
-                            prefix={<UserOutlined />}
-                            placeholder="用户名"
-                            fullWidth
-                        />
-                    </Form.Item>
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
-                    <Form.Item
-                        name="password"
-                        rules={[{ required: true, message: '请输入密码' }]}
-                    >
-                        <Input
-                            prefix={<LockOutlined />}
-                            type="password"
-                            placeholder="密码"
-                            fullWidth
-                        />
-                    </Form.Item>
+  const handleSubmit = async (values: { username: string; password: string }) => {
+    setLoading(true);
+    try {
+      await dispatch(login(values)).unwrap();
+      message.success('登录成功');
+      navigate('/', { replace: true });
+    } catch (error) {
+      const err = error as Error;
+      message.error(err.message || '登录失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    <Form.Item>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            loading={loading}
-                            fullWidth
-                            size="large"
-                        >
-                            登录
-                        </Button>
-                    </Form.Item>
-                </Form>
+  const handleFillDemo = (username: string, password: string) => {
+    form.setFieldsValue({ username, password });
+  };
 
-                <div className="login-footer">
-                    <p>© 2024 智慧教学平台 All Rights Reserved</p>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <div className="login-page">
+      <Card className="login-card" bordered={false}>
+        <Space direction="vertical" size={8} className="login-title-wrap">
+          <Title level={3} className="login-title">
+            教学平台登录
+          </Title>
+          <Text type="secondary">支持教务处、教师端与学生端演示，默认密码均为 123456。</Text>
+        </Space>
+
+        <Alert
+          className="login-alert"
+          type="info"
+          showIcon
+          message="演示账号"
+          description="admin / 123456（教务处），teacher01 / 123456（教师），student01 / 123456（学生）"
+        />
+
+        <Space wrap className="login-demo-buttons">
+          {demoAccounts.map((item) => (
+            <Button
+              key={item.label}
+              onClick={() => handleFillDemo(item.username, item.password)}
+              size="small"
+            >
+              填入{item.label}
+            </Button>
+          ))}
+        </Space>
+
+        <Form
+          form={form}
+          className="login-form"
+          onFinish={handleSubmit}
+          autoComplete="off"
+          size="large"
+          initialValues={{ username: 'teacher01', password: '123456' }}
+        >
+          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
+            <Input prefix={<UserOutlined />} placeholder="用户名" />
+          </Form.Item>
+
+          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
+            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block>
+              登录
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+    </div>
+  );
 };
 
 export default Login;

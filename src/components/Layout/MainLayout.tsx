@@ -1,6 +1,5 @@
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { Layout } from 'antd';
-import Sidebar from './Sidebar';
 import Header from './Header';
 import { useAppSelector } from '@/store/hooks';
 import './MainLayout.css';
@@ -8,21 +7,20 @@ import './MainLayout.css';
 const { Content } = Layout;
 
 const MainLayout = () => {
-    const { sidebarCollapsed } = useAppSelector((state) => state.ui);
+    const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+
+    if (!isAuthenticated || !user) {
+        return <Navigate to="/login" replace />;
+    }
 
     return (
         <Layout className="main-layout">
-            <Sidebar collapsed={sidebarCollapsed} />
-            <Layout
-                className="main-layout-content-wrapper"
-                style={{
-                    marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
-                    transition: 'margin-left var(--transition-base)',
-                }}
-            >
+            <Layout className="main-layout-content-wrapper">
                 <Header />
                 <Content className="main-layout-content">
-                    <Outlet />
+                    <div className="main-layout-inner">
+                        <Outlet />
+                    </div>
                 </Content>
             </Layout>
         </Layout>

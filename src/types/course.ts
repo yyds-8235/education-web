@@ -58,6 +58,19 @@ export interface CreateCourseParams {
     subject: string;
     visibility: CourseVisibility;
     coverImage?: string;
+    status?: 'active' | 'archived' | 'draft';
+    chapters?: Array<{
+        id?: string;
+        title: string;
+        description?: string;
+        resources?: Array<{
+            id?: string;
+            name: string;
+            type: CourseResource['type'];
+            url: string;
+            size: number;
+        }>;
+    }>;
 }
 
 export interface UpdateCourseParams extends Partial<CreateCourseParams> {
@@ -72,4 +85,5 @@ export interface CourseQueryParams {
     subject?: string;
     keyword?: string;
     status?: 'active' | 'archived' | 'draft';
+    scope?: 'mine' | 'joined' | 'discover' | 'all';
 }

@@ -11,6 +11,18 @@
 
 .main-layout-content {
     flex: 1;
-    padding: var(--space-6);
+    padding: var(--space-5) var(--space-4) var(--space-6);
     overflow: auto;
+}
+
+.main-layout-inner {
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .main-layout-content {
+        padding: var(--space-4) var(--space-3) var(--space-5);
+    }
 }

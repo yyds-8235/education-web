@@ -1,18 +1,23 @@
-.classroom-page {
-    display: flex;
+﻿.classroom-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.classroom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.interaction-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .classroom-header {
     flex-direction: column;
-    gap: var(--space-6);
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.page-title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin: 0;
+    gap: 8px;
+  }
 }

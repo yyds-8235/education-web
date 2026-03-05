@@ -1,6 +1,6 @@
 ﻿import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { AuthState, LoginParams, User } from '@/types';
-import { mockCredentials, mockUsers } from '@/mock/users';
+import { loginApi, getCurrentUserApi } from '@/services/auth';
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'userInfo';
@@ -29,24 +29,8 @@ const initialState: AuthState = {
 };
 
 export const login = createAsyncThunk('auth/login', async (params: LoginParams) => {
-  const credential = mockCredentials.find(
-    (item) => item.username === params.username && item.password === params.password
-  );
-
-  if (!credential) {
-    throw new Error('用户名或密码错误');
-  }
-
-  const user = mockUsers.find((item) => item.id === credential.userId);
-  if (!user) {
-    throw new Error('账号不存在');
-  }
-
-  return {
-    token: `mock-token-${user.id}`,
-    user,
-    expiresIn: 60 * 60 * 24,
-  };
+  const response = await loginApi(params);
+  return response;
 });
 
 export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async () => {
@@ -55,17 +39,7 @@ export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async 
     throw new Error('未登录');
   }
 
-  const persisted = readPersistedUser();
-  if (persisted) {
-    return persisted;
-  }
-
-  const userId = token.replace('mock-token-', '');
-  const user = mockUsers.find((item) => item.id === userId);
-  if (!user) {
-    throw new Error('账号不存在');
-  }
-
+  const user = await getCurrentUserApi();
   return user;
 });
 

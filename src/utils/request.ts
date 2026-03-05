@@ -28,15 +28,16 @@ request.interceptors.response.use(
   (response) => {
     const res: ApiResponse = response.data;
 
-    // 如果返回的状态码不是200，则显示错误信息
+    // 如果返回的状态码不是200或0，则显示错误信息
     if (res.code !== 200 && res.code !== 0) {
-      message.error(res.message || '请求失败');
-
       // 401: Token过期或未登录
       if (res.code === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        window.location.href = `${window.location.origin}${window.location.pathname}#/login`;
+        // 只有在非登录接口时才跳转
+        if (!response.config?.url?.includes('/auth/login')) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userInfo');
+          window.location.href = `${window.location.origin}${window.location.pathname}#/login`;
+        }
       }
 
       return Promise.reject(new Error(res.message || '请求失败'));
@@ -50,36 +51,48 @@ request.interceptors.response.use(
   (error) => {
     console.error('请求错误：', error);
 
+    let errorMessage = '请求失败';
+
     if (error.response) {
       // 服务器返回了错误状态码
-      switch (error.response.status) {
+      const { status, data } = error.response;
+
+      // 优先使用后端返回的 message
+      errorMessage = data?.message || errorMessage;
+
+      switch (status) {
         case 401:
-          message.error('未登录或登录已过期');
-          localStorage.removeItem('token');
-          localStorage.removeItem('userInfo');
-          window.location.href = `${window.location.origin}${window.location.pathname}#/login`;
+          errorMessage = data?.message || '用户名或密码错误';
+          // 只有在非登录接口时才跳转
+          if (!error.config?.url?.includes('/auth/login')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            window.location.href = `${window.location.origin}${window.location.pathname}#/login`;
+          }
           break;
         case 403:
-          message.error('没有权限访问');
+          errorMessage = data?.message || '没有权限访问';
           break;
         case 404:
-          message.error('请求的资源不存在');
+          errorMessage = data?.message || '请求的资源不存在';
+          break;
+        case 422:
+          errorMessage = data?.message || '参数校验失败';
           break;
         case 500:
-          message.error('服务器错误');
+          errorMessage = data?.message || '服务器错误';
           break;
-        default:
-          message.error(error.response.data?.message || '请求失败');
       }
     } else if (error.request) {
       // 请求已发出，但没有收到响应
-      message.error('网络错误，请检查网络连接');
+      errorMessage = '网络错误，请检查网络连接';
     } else {
       // 其他错误
-      message.error(error.message || '请求失败');
+      errorMessage = error.message || '请求失败';
     }
 
-    return Promise.reject(error);
+    // 返回包含错误信息的 Error 对象
+    return Promise.reject(new Error(errorMessage));
   }
 );
 

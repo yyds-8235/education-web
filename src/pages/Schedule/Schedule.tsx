@@ -52,25 +52,25 @@ const periods: PeriodSlot[] = [
   { index: 8, start: '16:55', end: '17:40' },
 ];
 
-const gradeOptions = ['初一', '初二', '初三'];
+const gradeOptions = ['初一', '初二', '初三', '高一', '高二', '高三'];
 const classOptions = ['1班', '2班', '3班', '4班'];
-const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '生物', '历史', '地理', '体育', '班会', '信息技术'];
+const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '多媒体', '日语'];
 
 const initialEntries: TimetableEntry[] = [
   { id: 'g1c1-1-1', grade: '初一', className: '1班', day: 1, period: 1, subject: '语文', teacher: '李老师', classroom: 'A101' },
   { id: 'g1c1-1-2', grade: '初一', className: '1班', day: 1, period: 2, subject: '数学', teacher: '张老师', classroom: 'A101' },
   { id: 'g1c1-1-3', grade: '初一', className: '1班', day: 1, period: 3, subject: '英语', teacher: '王老师', classroom: 'A101' },
-  { id: 'g1c1-1-4', grade: '初一', className: '1班', day: 1, period: 4, subject: '历史', teacher: '周老师', classroom: 'A101' },
+  { id: 'g1c1-1-4', grade: '初一', className: '1班', day: 1, period: 4, subject: '多媒体', teacher: '周老师', classroom: 'A101' },
   { id: 'g1c1-1-5', grade: '初一', className: '1班', day: 1, period: 5, subject: '物理', teacher: '陈老师', classroom: 'A201' },
-  { id: 'g1c1-1-6', grade: '初一', className: '1班', day: 1, period: 6, subject: '体育', teacher: '孙老师', classroom: '操场' },
-  { id: 'g1c1-1-7', grade: '初一', className: '1班', day: 1, period: 7, subject: '班会', teacher: '李老师', classroom: 'A101' },
+  { id: 'g1c1-1-6', grade: '初一', className: '1班', day: 1, period: 6, subject: '日语', teacher: '孙老师', classroom: 'A101' },
+  { id: 'g1c1-1-7', grade: '初一', className: '1班', day: 1, period: 7, subject: '语文', teacher: '李老师', classroom: 'A101' },
   { id: 'g1c1-2-1', grade: '初一', className: '1班', day: 2, period: 1, subject: '数学', teacher: '张老师', classroom: 'A101' },
   { id: 'g1c1-2-2', grade: '初一', className: '1班', day: 2, period: 2, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'g1c1-2-3', grade: '初一', className: '1班', day: 2, period: 3, subject: '地理', teacher: '吴老师', classroom: 'A203' },
+  { id: 'g1c1-2-3', grade: '初一', className: '1班', day: 2, period: 3, subject: '多媒体', teacher: '吴老师', classroom: 'A203' },
   { id: 'g1c1-2-4', grade: '初一', className: '1班', day: 2, period: 4, subject: '英语', teacher: '王老师', classroom: 'A101' },
   { id: 'g1c1-2-5', grade: '初一', className: '1班', day: 2, period: 5, subject: '化学', teacher: '郑老师', classroom: '实验楼1' },
-  { id: 'g1c1-2-6', grade: '初一', className: '1班', day: 2, period: 6, subject: '生物', teacher: '何老师', classroom: '实验楼2' },
-  { id: 'g1c1-2-7', grade: '初一', className: '1班', day: 2, period: 7, subject: '信息技术', teacher: '刘老师', classroom: '机房1' },
+  { id: 'g1c1-2-6', grade: '初一', className: '1班', day: 2, period: 6, subject: '日语', teacher: '何老师', classroom: 'A102' },
+  { id: 'g1c1-2-7', grade: '初一', className: '1班', day: 2, period: 7, subject: '多媒体', teacher: '刘老师', classroom: '机房1' },
   { id: 'g1c1-3-1', grade: '初一', className: '1班', day: 3, period: 1, subject: '英语', teacher: '王老师', classroom: 'A101' },
   { id: 'g1c1-3-2', grade: '初一', className: '1班', day: 3, period: 2, subject: '语文', teacher: '李老师', classroom: 'A101' },
   { id: 'g1c1-3-3', grade: '初一', className: '1班', day: 3, period: 3, subject: '数学', teacher: '张老师', classroom: 'A101' },
@@ -78,11 +78,11 @@ const initialEntries: TimetableEntry[] = [
   { id: 'g1c1-4-1', grade: '初一', className: '1班', day: 4, period: 1, subject: '语文', teacher: '李老师', classroom: 'A101' },
   { id: 'g1c1-4-2', grade: '初一', className: '1班', day: 4, period: 2, subject: '数学', teacher: '张老师', classroom: 'A101' },
   { id: 'g1c1-4-3', grade: '初一', className: '1班', day: 4, period: 3, subject: '英语', teacher: '王老师', classroom: 'A101' },
-  { id: 'g1c1-4-6', grade: '初一', className: '1班', day: 4, period: 6, subject: '体育', teacher: '孙老师', classroom: '操场' },
+  { id: 'g1c1-4-6', grade: '初一', className: '1班', day: 4, period: 6, subject: '日语', teacher: '孙老师', classroom: 'A102' },
   { id: 'g1c1-5-1', grade: '初一', className: '1班', day: 5, period: 1, subject: '语文', teacher: '李老师', classroom: 'A101' },
   { id: 'g1c1-5-2', grade: '初一', className: '1班', day: 5, period: 2, subject: '数学', teacher: '张老师', classroom: 'A101' },
   { id: 'g1c1-5-3', grade: '初一', className: '1班', day: 5, period: 3, subject: '英语', teacher: '王老师', classroom: 'A101' },
-  { id: 'g1c1-5-4', grade: '初一', className: '1班', day: 5, period: 4, subject: '历史', teacher: '周老师', classroom: 'A203' },
+  { id: 'g1c1-5-4', grade: '初一', className: '1班', day: 5, period: 4, subject: '多媒体', teacher: '周老师', classroom: '机房2' },
 ];
 
 const makeCellKey = (day: DayValue, period: number) => `${day}-${period}`;

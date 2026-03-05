@@ -75,6 +75,28 @@ export const mockUsers: User[] = [
     createdAt: now,
     updatedAt: now,
   },
+  {
+    id: 'student-5',
+    username: 'student05',
+    realName: '吴同学',
+    email: 'student05@example.com',
+    phone: '13900000005',
+    role: 'student',
+    status: 'active',
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'student-6',
+    username: 'student06',
+    realName: '郑同学',
+    email: 'student06@example.com',
+    phone: '13900000006',
+    role: 'student',
+    status: 'active',
+    createdAt: now,
+    updatedAt: now,
+  },
 ];
 
 export const mockCredentials: MockCredential[] = [
@@ -84,6 +106,8 @@ export const mockCredentials: MockCredential[] = [
   { username: 'student02', password: '123456', userId: 'student-2' },
   { username: 'student03', password: '123456', userId: 'student-3' },
   { username: 'student04', password: '123456', userId: 'student-4' },
+  { username: 'student05', password: '123456', userId: 'student-5' },
+  { username: 'student06', password: '123456', userId: 'student-6' },
 ];
 
 export const mockAdmin = mockUsers.find((user) => user.role === 'admin')!;

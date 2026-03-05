@@ -444,7 +444,7 @@ const TestList = () => {
         )}
       </div>
 
-      <Segmented
+      {/* <Segmented
         value={view}
         onChange={(value) => setView(value as 'teacher' | 'student')}
         options={
@@ -455,7 +455,7 @@ const TestList = () => {
               ]
             : [{ label: '学生视图', value: 'student' }]
         }
-      />
+      /> */}
 
       {view === 'teacher' ? (
         <div className="test-grid">

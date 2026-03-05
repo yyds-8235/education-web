@@ -23,6 +23,10 @@ import './CourseCreate.css';
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
+const gradeOptions = ['初一', '初二', '初三', '高一', '高二', '高三'];
+const classOptions = ['1班', '2班', '3班', '4班', '选修'];
+const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '多媒体', '日语'];
+
 type DraftResource = {
   id: string;
   name: string;
@@ -217,16 +221,25 @@ const CourseCreate = () => {
         >
           <div className="form-grid">
             <Form.Item label="课程名称" name="name" rules={[{ required: true, message: '请输入课程名称' }]}>
-              <Input placeholder="例如：高一信息技术基础" />
+              <Input placeholder="例如：高一物理力学基础" />
             </Form.Item>
-            <Form.Item label="学科" name="subject" rules={[{ required: true, message: '请输入学科' }]}>
-              <Input placeholder="例如：信息技术" />
+            <Form.Item label="学科" name="subject" rules={[{ required: true, message: '请选择学科' }]}>
+              <Select
+                placeholder="请选择学科"
+                options={subjectOptions.map((item) => ({ label: item, value: item }))}
+              />
             </Form.Item>
-            <Form.Item label="年级" name="grade" rules={[{ required: true, message: '请输入年级' }]}>
-              <Input placeholder="例如：高一" />
+            <Form.Item label="年级" name="grade" rules={[{ required: true, message: '请选择年级' }]}>
+              <Select
+                placeholder="请选择年级"
+                options={gradeOptions.map((item) => ({ label: item, value: item }))}
+              />
             </Form.Item>
-            <Form.Item label="班级" name="class" rules={[{ required: true, message: '请输入班级' }]}>
-              <Input placeholder="例如：1班" />
+            <Form.Item label="班级" name="class" rules={[{ required: true, message: '请选择班级' }]}>
+              <Select
+                placeholder="请选择班级"
+                options={classOptions.map((item) => ({ label: item, value: item }))}
+              />
             </Form.Item>
             <Form.Item label="公开范围" name="visibility" rules={[{ required: true }]}>
               <Select

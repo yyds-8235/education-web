@@ -74,7 +74,7 @@ interface ProfileFormValues {
   canEdit: boolean;
 }
 
-const grades = ['初一', '初二', '初三'];
+const grades = ['初一', '初二', '初三', '高一', '高二', '高三'];
 const classes = ['1班', '2班', '3班', '4班'];
 const povertyLevels: PovertyLevel[] = ['非困难', '一般困难', '困难', '特别困难'];
 

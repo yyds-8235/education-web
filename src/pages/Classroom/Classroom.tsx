@@ -273,8 +273,8 @@ const Classroom = () => {
             <Text type="secondary">开始时间：{dayjs(currentClassroom.startTime).format('YYYY-MM-DD HH:mm:ss')}</Text>
           </Card>
 
-          <Card title="课堂签到">
-            {user?.role === 'teacher' && (
+          {user?.role === 'teacher' && (
+            <Card title="课堂签到">
               <Space wrap style={{ marginBottom: 12 }}>
                 <InputNumber
                   min={1}
@@ -290,34 +290,34 @@ const Classroom = () => {
                   结束签到
                 </Button>
               </Space>
-            )}
 
-            <Table
-              size="small"
-              rowKey="id"
-              dataSource={checkInData}
-              pagination={false}
-              columns={[
-                { title: '学生', dataIndex: 'studentName' },
-                { title: '学号', dataIndex: 'studentNo' },
-                {
-                  title: '状态',
-                  dataIndex: 'status',
-                  render: (value: string) => (
-                    <Tag color={value === 'checked' ? 'green' : value === 'late' ? 'orange' : 'default'}>
-                      {value === 'checked' ? '已签到' : value === 'late' ? '迟到' : '未签到'}
-                    </Tag>
-                  ),
-                },
-                {
-                  title: '签到时间',
-                  dataIndex: 'checkInTime',
-                  render: (value?: string) => (value ? dayjs(value).format('HH:mm:ss') : '-'),
-                },
-              ]}
-              locale={{ emptyText: '暂无签到记录' }}
-            />
-          </Card>
+              <Table
+                size="small"
+                rowKey="id"
+                dataSource={checkInData}
+                pagination={false}
+                columns={[
+                  { title: '学生', dataIndex: 'studentName' },
+                  { title: '学号', dataIndex: 'studentNo' },
+                  {
+                    title: '状态',
+                    dataIndex: 'status',
+                    render: (value: string) => (
+                      <Tag color={value === 'checked' ? 'green' : value === 'late' ? 'orange' : 'default'}>
+                        {value === 'checked' ? '已签到' : value === 'late' ? '迟到' : '未签到'}
+                      </Tag>
+                    ),
+                  },
+                  {
+                    title: '签到时间',
+                    dataIndex: 'checkInTime',
+                    render: (value?: string) => (value ? dayjs(value).format('HH:mm:ss') : '-'),
+                  },
+                ]}
+                locale={{ emptyText: '暂无签到记录' }}
+              />
+            </Card>
+          )}
 
           <Card title="课堂互动">
             <Space direction="vertical" size={12} style={{ width: '100%' }}>

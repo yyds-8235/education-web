@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Button,
   Card,
@@ -34,6 +34,7 @@ const CourseDetail = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { allCourses, currentCourse, courseStudentMap } = useAppSelector((state) => state.course);
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     if (!id) {
@@ -64,11 +65,11 @@ const CourseDetail = () => {
 
     try {
       await dispatch(studentJoinCourse(course.id)).unwrap();
-      message.success('加入课程成功');
+      messageApi.success('加入课程成功');
       await dispatch(fetchCourseStudents(course.id));
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '加入失败');
+      messageApi.error(err.message || '加入失败');
     }
   };
 
@@ -78,6 +79,7 @@ const CourseDetail = () => {
 
   return (
     <div className="course-detail-page">
+      {contextHolder}
       <div className="course-detail-header">
         <div>
           <Title level={3}>{course.name}</Title>

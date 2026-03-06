@@ -37,6 +37,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     pagination,
     className = '',
 }) => {
+    const [messageApi, contextHolder] = message.useMessage();
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
     const [filters, setFilters] = useState<{
         keyword?: string;
@@ -188,7 +189,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     const handleExceptionSubmit = () => {
         if (selectedRecord && onMarkException) {
             onMarkException(selectedRecord.id, exceptionNote);
-            message.success('异常标记成功');
+            messageApi.success('异常标记成功');
         }
         setExceptionModalVisible(false);
         setSelectedRecord(null);
@@ -203,7 +204,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
                 type: filters.type,
             });
         } else {
-            message.warning('请选择日期范围后导出');
+            messageApi.warning('请选择日期范围后导出');
         }
     };
 
@@ -216,6 +217,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
 
     return (
         <div className={`attendance-table ${className}`}>
+            {contextHolder}
             <div className="attendance-table-toolbar">
                 <div className="toolbar-left">
                     <Input.Search

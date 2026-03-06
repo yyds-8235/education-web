@@ -7,6 +7,10 @@ import {
   CourseCreate,
   Classroom,
   TestList,
+  TestGrading,
+  TestStatistics,
+  TestAnswer,
+  TestDetail,
   Schedule,
   Attendance,
   Analytics,
@@ -50,6 +54,22 @@ export const router = createHashRouter([
       {
         path: 'tests',
         element: <TestList />,
+      },
+      {
+        path: 'tests/answer',
+        element: <TestAnswer />,
+      },
+      {
+        path: 'tests/detail',
+        element: <TestDetail />,
+      },
+      {
+        path: 'tests/grading/:testId',
+        element: <TestGrading />,
+      },
+      {
+        path: 'tests/statistics/:testId',
+        element: <TestStatistics />,
       },
       {
         path: 'schedule',

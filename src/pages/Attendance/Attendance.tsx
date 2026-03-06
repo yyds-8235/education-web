@@ -92,6 +92,7 @@ const labels: Record<AttendanceType, string> = {
 
 const Attendance = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const [messageApi, contextHolder] = message.useMessage();
   const [records, setRecords] = useState<AttendanceRecord[]>(attendanceSeed);
   const [syncLogs, setSyncLogs] = useState<string[]>([
     '2026-03-01 07:50 已完成考勤机批次同步（设备：A楼-01，B楼-03）',
@@ -158,12 +159,12 @@ const Attendance = () => {
       `${dayjs().format('YYYY-MM-DD HH:mm')} 已同步考勤机数据（新增 1 条）`,
       ...prev,
     ]);
-    message.success('考勤机数据同步成功');
+    messageApi.success('考勤机数据同步成功');
   };
 
   const handleExport = (params: { startDate: string; endDate: string; type?: AttendanceType }) => {
     const typeLabel = params.type ? labels[params.type] : '全部类型';
-    message.success(
+    messageApi.success(
       `已导出${reportType === 'personal' ? '个人' : reportType === 'class' ? '班级' : '年级'}考勤报表（${typeLabel}，${exportFormat.toUpperCase()}）`
     );
   };
@@ -196,6 +197,7 @@ const Attendance = () => {
 
   return (
     <div className="attendance-page">
+      {contextHolder}
       <div className="attendance-header">
         <div>
           <Title level={3} className="attendance-title">

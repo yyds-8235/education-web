@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Form, Input, Space, Typography, message } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,7 @@ const Login = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -31,11 +32,11 @@ const Login = () => {
     setLoading(true);
     try {
       await dispatch(login(values)).unwrap();
-      message.success('登录成功');
+      messageApi.success('登录成功');
       navigate('/', { replace: true });
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '登录失败');
+      messageApi.error(err.message || '登录失败');
     } finally {
       setLoading(false);
     }
@@ -47,6 +48,7 @@ const Login = () => {
 
   return (
     <div className="login-page">
+      {contextHolder}
       <Card className="login-card" bordered={false}>
         <Space direction="vertical" size={8} className="login-title-wrap">
           <Title level={3} className="login-title">

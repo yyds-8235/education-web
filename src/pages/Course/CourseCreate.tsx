@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿﻿import { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
@@ -72,6 +72,7 @@ const CourseCreate = () => {
   const [chapters, setChapters] = useState<DraftChapter[]>([]);
   const [saving, setSaving] = useState(false);
   const { allCourses } = useAppSelector((state) => state.course);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const editingCourse = useMemo(
     () => allCourses.find((course) => course.id === id),
@@ -172,7 +173,7 @@ const CourseCreate = () => {
   const handleSubmit = async (values: Omit<CreateCourseParams, 'chapters'>) => {
     const emptyChapter = chapters.find((chapter) => !chapter.title.trim());
     if (emptyChapter) {
-      message.warning('请填写完整章节名称');
+      messageApi.warning('请填写完整章节名称');
       return;
     }
 
@@ -190,16 +191,16 @@ const CourseCreate = () => {
     try {
       if (isEdit && id) {
         await dispatch(updateCourse({ id, ...payload })).unwrap();
-        message.success('课程已更新');
+        messageApi.success('课程已更新');
       } else {
         await dispatch(createCourse(payload)).unwrap();
-        message.success('课程已创建');
+        messageApi.success('课程已创建');
       }
 
       navigate('/courses');
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '保存失败');
+      messageApi.error(err.message || '保存失败');
     } finally {
       setSaving(false);
     }
@@ -207,6 +208,7 @@ const CourseCreate = () => {
 
   return (
     <div className="course-create-page">
+      {contextHolder}
       <div className="course-create-header">
         <Title level={3}>{isEdit ? '编辑课程' : '创建课程'}</Title>
         <Text type="secondary">支持配置章节并导入 MP4、PPT、Word、PDF 等教学资料。</Text>
@@ -225,7 +227,13 @@ const CourseCreate = () => {
             </Form.Item>
             <Form.Item label="学科" name="subject" rules={[{ required: true, message: '请选择学科' }]}>
               <Select
-                placeholder="请选择学科"
+                placeholder="请选择学科或输入自定义学科"
+                showSearch
+                allowClear
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
                 options={subjectOptions.map((item) => ({ label: item, value: item }))}
               />
             </Form.Item>
@@ -246,7 +254,6 @@ const CourseCreate = () => {
                 options={[
                   { label: '公开课程（学生可自行加入）', value: 'public' },
                   { label: '私有课程（仅教师拉取学生）', value: 'private' },
-                  { label: '班级可见', value: 'class_only' },
                 ]}
               />
             </Form.Item>
@@ -255,7 +262,8 @@ const CourseCreate = () => {
                 options={[
                   { label: '草稿', value: 'draft' },
                   { label: '进行中', value: 'active' },
-                  { label: '归档', value: 'archived' },
+                  { label: '已暂停', value: 'pending' },
+                  { label: '已结课', value: 'finished' },
                 ]}
               />
             </Form.Item>

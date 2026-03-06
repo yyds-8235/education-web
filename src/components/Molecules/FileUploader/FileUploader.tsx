@@ -56,6 +56,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     disabled = false,
     listType = 'text',
 }) => {
+    const [messageApi, contextHolder] = message.useMessage();
     const [fileList, setFileList] = useState<UploadFile[]>(value);
     const [uploading, setUploading] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -68,7 +69,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     const beforeUpload = useCallback(
         (file: File) => {
             if (file.size > maxSize) {
-                message.error(`文件大小不能超过 ${Math.floor(maxSize / 1024 / 1024)}MB`);
+                messageApi.error(`文件大小不能超过 ${Math.floor(maxSize / 1024 / 1024)}MB`);
                 return false;
             }
             return true;
@@ -190,6 +191,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
     return (
         <div className={`file-uploader ${className}`}>
+            {contextHolder}
             {dragable ? (
                 <Upload.Dragger {...uploadProps} />
             ) : (

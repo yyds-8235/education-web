@@ -32,6 +32,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     onPause,
     className = '',
 }) => {
+    const [messageApi, contextHolder] = message.useMessage();
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(true);
@@ -102,7 +103,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             video.pause();
         } else {
             video.play().catch(() => {
-                message.error('视频播放失败');
+                messageApi.error('视频播放失败');
             });
         }
     }, [playing]);
@@ -169,6 +170,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             onMouseMove={handleMouseMove}
             onMouseLeave={() => playing && setShowControls(false)}
         >
+            {contextHolder}
             <video
                 ref={videoRef}
                 src={src}

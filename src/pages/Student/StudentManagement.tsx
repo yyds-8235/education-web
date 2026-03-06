@@ -117,6 +117,7 @@ const StudentManagement = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { courses, students } = useAppSelector((state) => state.course);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const [selectedCourseId, setSelectedCourseId] = useState<string>();
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -186,12 +187,12 @@ const StudentManagement = () => {
     }
     try {
       await dispatch(addStudentsToCourse({ courseId: selectedCourseId, studentIds: selectedStudentIds })).unwrap();
-      message.success('已拉取学生加入课程');
+      messageApi.success('已拉取学生加入课程');
       setSelectedStudentIds([]);
       await dispatch(fetchCourseStudents(selectedCourseId));
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '操作失败');
+      messageApi.error(err.message || '操作失败');
     }
   };
 
@@ -201,11 +202,11 @@ const StudentManagement = () => {
     }
     try {
       await dispatch(removeStudentFromCourse({ courseId: selectedCourseId, studentId })).unwrap();
-      message.success('已移除学生');
+      messageApi.success('已移除学生');
       await dispatch(fetchCourseStudents(selectedCourseId));
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '移除失败');
+      messageApi.error(err.message || '移除失败');
     }
   };
 
@@ -216,7 +217,7 @@ const StudentManagement = () => {
   const handleSyncLearningData = () => {
     const syncedAt = new Date().toLocaleString();
     setProfiles((prev) => prev.map((item) => ({ ...item, syncedAt })));
-    message.success('已完成学生档案同步');
+    messageApi.success('已完成学生数据同步');
   };
 
   const openCreateModal = () => {
@@ -279,7 +280,7 @@ const StudentManagement = () => {
             : item
         )
       );
-      message.success('学生信息已更新');
+      messageApi.success('学生信息已更新');
     } else {
       const newProfile: StudentProfile = {
         id: `student-profile-${Date.now()}`,
@@ -287,14 +288,14 @@ const StudentManagement = () => {
         syncedAt: new Date().toLocaleString(),
       };
       setProfiles((prev) => [newProfile, ...prev]);
-      message.success('学生信息已新增');
+      messageApi.success('学生信息已新增');
     }
     closeModal();
   };
 
   const handleDeleteProfile = (id: string) => {
     setProfiles((prev) => prev.filter((item) => item.id !== id));
-    message.success('学生档案已删除');
+    messageApi.success('学生档案已删除');
   };
 
   const adminColumns: ColumnsType<StudentProfile> = [
@@ -405,6 +406,7 @@ const StudentManagement = () => {
   if (user?.role === 'admin') {
     return (
       <div className="student-management-page">
+        {contextHolder}
         <div className="student-management-header student-admin-header">
           <div>
             <Title level={3}>学生信息管理系统</Title>
@@ -535,6 +537,7 @@ const StudentManagement = () => {
 
   return (
     <div className="student-management-page">
+      {contextHolder}
       <div className="student-management-header">
         <Title level={3}>学生管理</Title>
         <Text type="secondary">按课程管理已加入学生，支持教师拉取与移除。</Text>

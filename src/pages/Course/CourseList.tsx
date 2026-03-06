@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
@@ -47,6 +47,7 @@ const CourseList = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { courses, loading, total, students } = useAppSelector((state) => state.course);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const [keyword, setKeyword] = useState('');
   const [scope, setScope] = useState<StudentScope>('joined');
@@ -79,23 +80,23 @@ const CourseList = () => {
   const handleDeleteCourse = async (courseId: string) => {
     try {
       await dispatch(deleteCourse(courseId)).unwrap();
-      message.success('课程已删除');
+      messageApi.success('课程已删除');
       await loadCourses();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '删除失败');
+      messageApi.error(err.message || '删除失败');
     }
   };
 
   const handleJoinCourse = async (courseId: string) => {
     try {
       await dispatch(studentJoinCourse(courseId)).unwrap();
-      message.success('加入课程成功');
+      messageApi.success('加入课程成功');
       setScope('joined');
       await loadCourses(keyword, 'joined');
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '加入课程失败');
+      messageApi.error(err.message || '加入课程失败');
     }
   };
 
@@ -123,13 +124,13 @@ const CourseList = () => {
           studentIds: selectedStudentIds,
         })
       ).unwrap();
-      message.success('已拉取学生加入课程');
+      messageApi.success('已拉取学生加入课程');
       setSelectedStudentIds([]);
       await dispatch(fetchCourseStudents(selectedCourse.id));
       await loadCourses();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '操作失败');
+      messageApi.error(err.message || '操作失败');
     }
   };
 
@@ -140,17 +141,18 @@ const CourseList = () => {
 
     try {
       await dispatch(removeStudentFromCourse({ courseId: selectedCourse.id, studentId })).unwrap();
-      message.success('已移除学生');
+      messageApi.success('已移除学生');
       await dispatch(fetchCourseStudents(selectedCourse.id));
       await loadCourses();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '移除失败');
+      messageApi.error(err.message || '移除失败');
     }
   };
 
   return (
     <div className="course-list-page">
+      {contextHolder}
       <div className="page-header">
         <div>
           <Title level={3} className="page-title">

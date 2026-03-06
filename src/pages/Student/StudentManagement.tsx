@@ -28,6 +28,16 @@ import {
   fetchCourseStudents,
   removeStudentFromCourse,
 } from '@/store/slices/courseSlice';
+import {
+  getStudentListApi,
+  createStudentApi,
+  updateStudentApi,
+  deleteStudentApi,
+  updateStudentPermissionsApi,
+  syncStudentsApi,
+  type StudentProfile as ApiStudentProfile,
+  type CreateStudentParams,
+} from '@/services/student';
 import './StudentManagement.css';
 
 const { Title, Text } = Typography;
@@ -36,30 +46,13 @@ type PovertyLevel = '非困难' | '一般困难' | '困难' | '特别困难';
 type HouseholdType = '城镇' | '农村';
 type ArchiveFilter = PovertyLevel | 'funded';
 
-interface StudentProfile {
-  id: string;
-  studentNo: string;
-  name: string;
-  username: string;
-  grade: string;
-  class: string;
-  guardian: string;
-  syncedAt: string;
-  povertyLevel: PovertyLevel;
-  isSponsored: boolean;
-  householdType: HouseholdType;
-  isLeftBehind: boolean;
-  isDisabled: boolean;
-  isSingleParent: boolean;
-  isKeyConcern: boolean;
-  canView: boolean;
-  canEdit: boolean;
-}
+type StudentProfile = ApiStudentProfile;
 
 interface ProfileFormValues {
   studentNo: string;
   name: string;
   username: string;
+  password?: string;
   grade: string;
   class: string;
   guardian: string;
@@ -72,36 +65,13 @@ interface ProfileFormValues {
   isKeyConcern: boolean;
   canView: boolean;
   canEdit: boolean;
+  email?: string;
+  phone?: string;
 }
 
 const grades = ['初一', '初二', '初三', '高一', '高二', '高三'];
 const classes = ['1班', '2班', '3班', '4班'];
 const povertyLevels: PovertyLevel[] = ['非困难', '一般困难', '困难', '特别困难'];
-
-const buildStudentProfiles = (): StudentProfile[] =>
-  mockStudents.map((student, index) => {
-    const povertyLevel = povertyLevels[index % povertyLevels.length];
-
-    return {
-      id: student.id,
-      studentNo: `S2026${String(index + 1).padStart(3, '0')}`,
-      name: student.realName,
-      username: student.username,
-      grade: grades[index % grades.length],
-      class: classes[index % classes.length],
-      guardian: `家长${index + 1}`,
-      syncedAt: '2026-03-01 09:00',
-      povertyLevel,
-      isSponsored: povertyLevel !== '非困难' && index % 2 === 0,
-      householdType: index % 2 === 0 ? '城镇' : '农村',
-      isLeftBehind: index % 3 === 0,
-      isDisabled: index % 5 === 0,
-      isSingleParent: index % 4 === 0,
-      isKeyConcern: index % 3 === 0 || povertyLevel === '特别困难',
-      canView: true,
-      canEdit: index % 2 === 0,
-    };
-  });
 
 const getProfileTags = (profile: StudentProfile) => [
   `贫困等级：${profile.povertyLevel}`,
@@ -122,7 +92,9 @@ const StudentManagement = () => {
   const [selectedCourseId, setSelectedCourseId] = useState<string>();
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
-  const [profiles, setProfiles] = useState<StudentProfile[]>(buildStudentProfiles);
+  const [profiles, setProfiles] = useState<StudentProfile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
   const [keyword, setKeyword] = useState('');
   const [gradeFilter, setGradeFilter] = useState<string>();
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>();
@@ -144,42 +116,36 @@ const StudentManagement = () => {
     void dispatch(fetchCourseStudents(selectedCourseId));
   }, [dispatch, selectedCourseId]);
 
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      void loadStudentList();
+    }
+  }, [user?.role, pagination.page, pagination.pageSize, keyword, gradeFilter, archiveFilter]);
+
+  const loadStudentList = async () => {
+    setLoading(true);
+    try {
+      const response = await getStudentListApi({
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        keyword,
+        grade: gradeFilter,
+        archiveFilter,
+      });
+      setProfiles(response.list);
+      setPagination((prev) => ({ ...prev, total: response.total }));
+    } catch (error) {
+      const err = error as Error;
+      message.error(err.message || '加载学生列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const availableStudents = useMemo(() => {
     const joinedSet = new Set(students.map((student) => student.studentId));
     return mockStudents.filter((student) => !joinedSet.has(student.id));
   }, [students]);
-
-  const filteredProfiles = useMemo(
-    () =>
-      profiles.filter((item) => {
-        if (keyword) {
-          const lowerKeyword = keyword.toLowerCase();
-          const allTags = getProfileTags(item).join(' ').toLowerCase();
-          if (
-            !item.name.toLowerCase().includes(lowerKeyword) &&
-            !item.studentNo.toLowerCase().includes(lowerKeyword) &&
-            !allTags.includes(lowerKeyword)
-          ) {
-            return false;
-          }
-        }
-
-        if (gradeFilter && item.grade !== gradeFilter) {
-          return false;
-        }
-
-        if (archiveFilter === 'funded' && !item.isSponsored) {
-          return false;
-        }
-
-        if (archiveFilter && archiveFilter !== 'funded' && item.povertyLevel !== archiveFilter) {
-          return false;
-        }
-
-        return true;
-      }),
-    [archiveFilter, gradeFilter, keyword, profiles]
-  );
 
   const handleAddStudents = async () => {
     if (!selectedCourseId || selectedStudentIds.length === 0) {
@@ -210,8 +176,20 @@ const StudentManagement = () => {
     }
   };
 
-  const updateProfile = (id: string, changes: Partial<StudentProfile>) => {
-    setProfiles((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
+  const updateProfile = async (id: string, changes: Partial<StudentProfile>) => {
+    try {
+      if (changes.canView !== undefined || changes.canEdit !== undefined) {
+        await updateStudentPermissionsApi(id, {
+          canView: changes.canView ?? profiles.find((p) => p.id === id)?.canView ?? true,
+          canEdit: changes.canEdit ?? profiles.find((p) => p.id === id)?.canEdit ?? false,
+        });
+        message.success('权限已更新');
+        await loadStudentList();
+      }
+    } catch (error) {
+      const err = error as Error;
+      message.error(err.message || '更新失败');
+    }
   };
 
   const handleSyncLearningData = () => {
@@ -226,6 +204,7 @@ const StudentManagement = () => {
       studentNo: '',
       name: '',
       username: '',
+      password: '',
       grade: '初一',
       class: '1班',
       guardian: '',
@@ -238,6 +217,8 @@ const StudentManagement = () => {
       isKeyConcern: false,
       canView: true,
       canEdit: true,
+      email: '',
+      phone: '',
     });
     setModalOpen(true);
   };
@@ -271,31 +252,59 @@ const StudentManagement = () => {
   };
 
   const handleSaveProfile = async () => {
-    const values = await form.validateFields();
-    if (editingProfile) {
-      setProfiles((prev) =>
-        prev.map((item) =>
-          item.id === editingProfile.id
-            ? { ...item, ...values, syncedAt: new Date().toLocaleString() }
-            : item
-        )
-      );
-      messageApi.success('学生信息已更新');
-    } else {
-      const newProfile: StudentProfile = {
-        id: `student-profile-${Date.now()}`,
-        ...values,
-        syncedAt: new Date().toLocaleString(),
-      };
-      setProfiles((prev) => [newProfile, ...prev]);
-      messageApi.success('学生信息已新增');
+// <<<<<<< HEAD
+//     const values = await form.validateFields();
+//     if (editingProfile) {
+//       setProfiles((prev) =>
+//         prev.map((item) =>
+//           item.id === editingProfile.id
+//             ? { ...item, ...values, syncedAt: new Date().toLocaleString() }
+//             : item
+//         )
+//       );
+//       messageApi.success('学生信息已更新');
+//     } else {
+//       const newProfile: StudentProfile = {
+//         id: `student-profile-${Date.now()}`,
+//         ...values,
+//         syncedAt: new Date().toLocaleString(),
+//       };
+//       setProfiles((prev) => [newProfile, ...prev]);
+//       messageApi.success('学生信息已新增');
+// =======
+    try {
+      const values = await form.validateFields();
+      if (editingProfile) {
+        await updateStudentApi(editingProfile.id, values);
+        message.success('学生信息已更新');
+      } else {
+        await createStudentApi(values as CreateStudentParams);
+        message.success('学生信息已新增');
+      }
+      closeModal();
+      await loadStudentList();
+    } catch (error) {
+      const err = error as Error;
+      message.error(err.message || '保存失败');
+// >>>>>>> 4e3a27e0d8bd463a0a3c80e3c35b4a9d0aff7482
     }
-    closeModal();
   };
 
-  const handleDeleteProfile = (id: string) => {
-    setProfiles((prev) => prev.filter((item) => item.id !== id));
-    messageApi.success('学生档案已删除');
+// <<<<<<< HEAD
+//   const handleDeleteProfile = (id: string) => {
+//     setProfiles((prev) => prev.filter((item) => item.id !== id));
+//     messageApi.success('学生档案已删除');
+// =======
+  const handleDeleteProfile = async (id: string) => {
+    try {
+      await deleteStudentApi(id);
+      message.success('学生档案已删除');
+      await loadStudentList();
+    } catch (error) {
+      const err = error as Error;
+      message.error(err.message || '删除失败');
+    }
+// >>>>>>> 4e3a27e0d8bd463a0a3c80e3c35b4a9d0aff7482
   };
 
   const adminColumns: ColumnsType<StudentProfile> = [
@@ -428,25 +437,31 @@ const StudentManagement = () => {
               placeholder="按学号/姓名/标签检索"
               allowClear
               style={{ width: 280 }}
-              onSearch={setKeyword}
+              onSearch={(value) => {
+                setKeyword(value);
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
             />
             <Select
               allowClear
               placeholder="筛选年级"
               style={{ width: 140 }}
               value={gradeFilter}
-              onChange={setGradeFilter}
-              options={[...new Set(profiles.map((item) => item.grade))].map((value) => ({
-                value,
-                label: value,
-              }))}
+              onChange={(value) => {
+                setGradeFilter(value);
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
+              options={grades.map((value) => ({ value, label: value }))}
             />
             <Select
               allowClear
               placeholder="筛选分类归档"
               style={{ width: 220 }}
               value={archiveFilter}
-              onChange={setArchiveFilter}
+              onChange={(value) => {
+                setArchiveFilter(value);
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
               options={[
                 { value: 'funded', label: '资助对象' },
                 ...povertyLevels.map((level) => ({ value: level, label: `贫困等级：${level}` })),
@@ -459,8 +474,16 @@ const StudentManagement = () => {
           <Table
             rowKey="id"
             columns={adminColumns}
-            dataSource={filteredProfiles}
-            pagination={{ pageSize: 8 }}
+            dataSource={profiles}
+            loading={loading}
+            pagination={{
+              current: pagination.page,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page, pageSize) => {
+                setPagination({ ...pagination, page, pageSize });
+              },
+            }}
             scroll={{ x: 1300 }}
           />
         </Card>
@@ -485,6 +508,11 @@ const StudentManagement = () => {
               <Form.Item name="username" label="账号" rules={[{ required: true, message: '请输入账号' }]}>
                 <Input />
               </Form.Item>
+              {!editingProfile && (
+                <Form.Item name="password" label="密码" rules={[{ required: true, message: '请输入密码' }]}>
+                  <Input.Password />
+                </Form.Item>
+              )}
               <Form.Item name="guardian" label="监护人" rules={[{ required: true, message: '请输入监护人' }]}>
                 <Input />
               </Form.Item>
@@ -499,6 +527,12 @@ const StudentManagement = () => {
               </Form.Item>
               <Form.Item name="householdType" label="户籍类型" rules={[{ required: true, message: '请选择户籍类型' }]}>
                 <Select options={[{ value: '城镇', label: '城镇' }, { value: '农村', label: '农村' }]} />
+              </Form.Item>
+              <Form.Item name="email" label="邮箱">
+                <Input />
+              </Form.Item>
+              <Form.Item name="phone" label="手机号">
+                <Input />
               </Form.Item>
             </div>
 

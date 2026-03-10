@@ -34,6 +34,7 @@ const attendanceTrend = [94, 95, 95.5, 96, 96.2];
 
 const Analytics = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const [messageApi, contextHolder] = message.useMessage();
   const [dimensions, setDimensions] = useState<Dimension[]>(['grade', 'subject']);
   const [period, setPeriod] = useState<'week' | 'month' | 'term'>('term');
 
@@ -129,7 +130,7 @@ const Analytics = () => {
   );
 
   const handleExport = (format: 'excel' | 'pdf') => {
-    message.success(`已导出${period === 'week' ? '周' : period === 'month' ? '月' : '学期'}统计报表（${format.toUpperCase()}）`);
+    messageApi.success(`已导出${period === 'week' ? '周' : period === 'month' ? '月' : '学期'}统计报表（${format.toUpperCase()}）`);
   };
 
   if (user?.role !== 'admin') {
@@ -138,6 +139,7 @@ const Analytics = () => {
 
   return (
     <div className="analytics-page">
+      {contextHolder}
       <div className="analytics-header">
         <div>
           <Title level={3} className="analytics-title">

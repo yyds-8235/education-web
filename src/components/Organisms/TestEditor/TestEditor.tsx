@@ -49,6 +49,7 @@ const TestEditor: React.FC<TestEditorProps> = ({
     loading = false,
     className = '',
 }) => {
+    const [messageApi, contextHolder] = message.useMessage();
     const [questionList, setQuestionList] = useState<TestQuestion[]>(questions);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [formData, setFormData] = useState<QuestionFormData>(defaultQuestion);
@@ -100,21 +101,21 @@ const TestEditor: React.FC<TestEditorProps> = ({
 
     const handleSaveQuestion = () => {
         if (!formData.content.trim()) {
-            message.error('请输入题目内容');
+            messageApi.error('请输入题目内容');
             return;
         }
 
         if (formData.type === 'single_choice') {
             if (!formData.options?.every((opt) => opt.content.trim())) {
-                message.error('请填写所有选项');
+                messageApi.error('请填写所有选项');
                 return;
             }
             if (!formData.answer) {
-                message.error('请选择正确答案');
+                messageApi.error('请选择正确答案');
                 return;
             }
         } else if (!formData.answer.trim()) {
-            message.error('请输入答案');
+            messageApi.error('请输入答案');
             return;
         }
 
@@ -146,7 +147,7 @@ const TestEditor: React.FC<TestEditorProps> = ({
 
         updateQuestionList(newList);
         setModalVisible(false);
-        message.success(editingIndex !== null ? '题目已更新' : '题目已添加');
+        messageApi.success(editingIndex !== null ? '题目已更新' : '题目已添加');
     };
 
     const handleMoveQuestion = (index: number, direction: 'up' | 'down') => {
@@ -178,6 +179,7 @@ const TestEditor: React.FC<TestEditorProps> = ({
 
     return (
         <div className={`test-editor ${className}`}>
+            {contextHolder}
             <div className="test-editor-header">
                 <div className="test-editor-stats">
                     <span>共 {questionList.length} 道题目</span>

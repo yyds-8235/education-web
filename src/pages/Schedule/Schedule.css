@@ -64,6 +64,15 @@
   margin-top: 4px;
   font-size: 12px;
   color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.period-time:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
 }
 
 .schedule-cell-button {

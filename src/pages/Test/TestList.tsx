@@ -1,6 +1,5 @@
 ﻿﻿import { useEffect, useMemo, useState } from 'react';
 import {
-  Badge,
   Button,
   Card,
   Empty,
@@ -9,17 +8,12 @@ import {
   InputNumber,
   List,
   Modal,
-  Radio,
-  Segmented,
   Select,
   Space,
-  Statistic,
-  Table,
   Tag,
   Typography,
   message,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import {
   BarChartOutlined,
   EditOutlined,
@@ -30,15 +24,10 @@ import {
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
-  batchGradeObjective,
   createTest,
-  fetchStatistics,
-  fetchSubmissions,
   fetchTests,
-  gradeSubmission,
   publishTest,
   submitAppeal,
-  submitTest,
   updateTest,
 } from '@/store/slices/testSlice';
 import type {
@@ -47,10 +36,241 @@ import type {
   TestSubmission,
   CreateTestParams,
 } from '@/types';
+import { useNavigate } from 'react-router-dom';
 import './TestList.css';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+const staticTests: Test[] = [
+  {
+    id: 'test-1',
+    courseId: 'course-1',
+    courseName: '小学数学',
+    title: '第一单元测试',
+    description: '测试第一单元知识点',
+    duration: 30,
+    totalScore: 100,
+    showAnswer: true,
+    status: 'published',
+    questions: [
+      {
+        id: 'q1',
+        testId: 'test-1',
+        type: 'single_choice',
+        content: '1 + 1 = ?',
+        options: [
+          { id: 'A', label: 'A', content: '1' },
+          { id: 'B', label: 'B', content: '2' },
+          { id: 'C', label: 'C', content: '3' },
+          { id: 'D', label: 'D', content: '4' },
+        ],
+        answer: 'B',
+        score: 10,
+        order: 1,
+        analysis: '1 + 1 = 2',
+      },
+      {
+        id: 'q2',
+        testId: 'test-1',
+        type: 'single_choice',
+        content: '2 × 3 = ?',
+        options: [
+          { id: 'A', label: 'A', content: '5' },
+          { id: 'B', label: 'B', content: '6' },
+          { id: 'C', label: 'C', content: '7' },
+          { id: 'D', label: 'D', content: '8' },
+        ],
+        answer: 'B',
+        score: 10,
+        order: 2,
+        analysis: '2 × 3 = 6',
+      },
+      {
+        id: 'q3',
+        testId: 'test-1',
+        type: 'fill_blank',
+        content: '5 + 5 = ___',
+        answer: '10',
+        score: 20,
+        order: 3,
+        analysis: '5 + 5 = 10',
+      },
+      {
+        id: 'q4',
+        testId: 'test-1',
+        type: 'short_answer',
+        content: '请简述加法的基本性质。',
+        answer: '加法交换律：a + b = b + a；加法结合律：(a + b) + c = a + (b + c)',
+        score: 60,
+        order: 4,
+        analysis: '加法的基本性质包括交换律和结合律。',
+      },
+    ],
+    submissions: [
+      {
+        id: 'sub-1',
+        testId: 'test-1',
+        studentId: 'student-1',
+        studentName: '张三',
+        studentNo: 'S2026001',
+        answers: [
+          { questionId: 'q1', answer: 'B', score: 10, isCorrect: true },
+          { questionId: 'q2', answer: 'B', score: 10, isCorrect: true },
+          { questionId: 'q3', answer: '10', score: 20, isCorrect: true },
+          { questionId: 'q4', answer: '加法交换律和结合律', score: 50, isCorrect: true, feedback: '回答正确！' },
+        ],
+        totalScore: 90,
+        status: 'draft',
+        submittedAt: '2026-03-05T10:00:00.000Z',
+        gradedAt: '2026-03-05T12:00:00.000Z',
+        createdAt: '2026-03-05T10:00:00.000Z',
+      },
+    ],
+    createdAt: '2026-03-01T00:00:00.000Z',
+    updatedAt: '2026-03-01T00:00:00.000Z',
+  },
+  {
+    id: 'test-2',
+    courseId: 'course-2',
+    courseName: '小学语文',
+    title: '古诗词测试',
+    description: '测试古诗词掌握情况',
+    duration: 45,
+    totalScore: 100,
+    showAnswer: true,
+    status: 'published',
+    questions: [
+      {
+        id: 'q1',
+        testId: 'test-2',
+        type: 'single_choice',
+        content: '春眠不觉晓，处处闻啼___',
+        options: [
+          { id: 'A', label: 'A', content: '鸟' },
+          { id: 'B', label: 'B', content: '鸡' },
+          { id: 'C', label: 'C', content: '鸭' },
+          { id: 'D', label: 'D', content: '鹅' },
+        ],
+        answer: 'A',
+        score: 10,
+        order: 1,
+        analysis: '出自孟浩然的《春晓》',
+      },
+      {
+        id: 'q2',
+        testId: 'test-2',
+        type: 'fill_blank',
+        content: '举头望明月，___头思故乡',
+        answer: '低',
+        score: 20,
+        order: 2,
+        analysis: '出自李白的《静夜思》',
+      },
+      {
+        id: 'q3',
+        testId: 'test-2',
+        type: 'short_answer',
+        content: '请背诵一首你最喜欢的古诗，并说明理由。',
+        answer: '略',
+        score: 70,
+        order: 3,
+        analysis: '学生自由发挥，只要言之有理即可。',
+      },
+    ],
+    submissions: [
+      {
+        id: 'sub-2',
+        testId: 'test-2',
+        studentId: 'student-1',
+        studentName: '张三',
+        studentNo: 'S2026001',
+        answers: [
+          { questionId: 'q1', answer: 'A', score: 10, isCorrect: true },
+          { questionId: 'q2', answer: '低', score: 20, isCorrect: true },
+          { questionId: 'q3', answer: '静夜思', score: 60, isCorrect: true, feedback: '很好！' },
+        ],
+        totalScore: 90,
+        status: 'draft',
+        submittedAt: '2026-03-06T10:00:00.000Z',
+        gradedAt: '2026-03-06T12:00:00.000Z',
+        createdAt: '2026-03-06T10:00:00.000Z',
+      },
+    ],
+    createdAt: '2026-03-02T00:00:00.000Z',
+    updatedAt: '2026-03-02T00:00:00.000Z',
+  },
+  {
+    id: 'test-3',
+    courseId: 'course-3',
+    courseName: '小学英语',
+    title: 'Unit 1 测试',
+    description: '测试第一单元词汇和语法',
+    duration: 30,
+    totalScore: 100,
+    showAnswer: true,
+    status: 'ended',
+    questions: [
+      {
+        id: 'q1',
+        testId: 'test-3',
+        type: 'single_choice',
+        content: 'What ___ your name?',
+        options: [
+          { id: 'A', label: 'A', content: 'is' },
+          { id: 'B', label: 'B', content: 'are' },
+          { id: 'C', label: 'C', content: 'am' },
+          { id: 'D', label: 'D', content: 'be' },
+        ],
+        answer: 'A',
+        score: 10,
+        order: 1,
+        analysis: '第二人称单数用is',
+      },
+      {
+        id: 'q2',
+        testId: 'test-3',
+        type: 'fill_blank',
+        content: '___ is a book.',
+        answer: 'This',
+        score: 20,
+        order: 2,
+        analysis: '这是一本书。',
+      },
+      {
+        id: 'q3',
+        testId: 'test-3',
+        type: 'short_answer',
+        content: '请用英语介绍你自己。',
+        answer: '略',
+        score: 70,
+        order: 3,
+        analysis: '学生自由发挥，包括姓名、年龄、爱好等。',
+      },
+    ],
+    submissions: [
+      {
+        id: 'sub-3',
+        testId: 'test-3',
+        studentId: 'student-1',
+        studentName: '张三',
+        studentNo: 'S2026001',
+        answers: [
+          { questionId: 'q1', answer: 'A', score: 10, isCorrect: true },
+          { questionId: 'q2', answer: 'This', score: 20, isCorrect: true },
+          { questionId: 'q3', answer: 'My name is Zhang San.', score: 50, isCorrect: true, feedback: 'Good!' },
+        ],
+        totalScore: 80,
+        status: 'graded',
+        submittedAt: '2026-03-04T10:00:00.000Z',
+        gradedAt: '2026-03-04T12:00:00.000Z',
+        createdAt: '2026-03-04T10:00:00.000Z',
+      },
+    ],
+    createdAt: '2026-03-03T00:00:00.000Z',
+    updatedAt: '2026-03-03T00:00:00.000Z',
+  },
+];
 
 interface QuestionDraft {
   id: string;
@@ -82,28 +302,26 @@ const buildDefaultQuestion = (type: QuestionType): QuestionDraft => ({
 
 const TestList = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const { allCourses } = useAppSelector((state) => state.course);
-  const { tests, submissions, statistics } = useAppSelector((state) => state.test);
+  const { tests: storeTests } = useAppSelector((state) => state.test);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const tests = useMemo(() => {
+    if (user?.role === 'student') {
+      return [...staticTests, ...storeTests];
+    }
+    return storeTests;
+  }, [storeTests, user?.role]);
 
   const [view, setView] = useState<'teacher' | 'student'>(user?.role === 'teacher' ? 'teacher' : 'student');
   const [testModalOpen, setTestModalOpen] = useState(false);
   const [editingTest, setEditingTest] = useState<Test | null>(null);
   const [questionDrafts, setQuestionDrafts] = useState<QuestionDraft[]>([]);
-  const [gradingTest, setGradingTest] = useState<Test | null>(null);
-  const [gradingSubmission, setGradingSubmission] = useState<TestSubmission | null>(null);
-  const [gradeModalOpen, setGradeModalOpen] = useState(false);
-  const [gradeDraft, setGradeDraft] = useState<Record<string, { score: number; feedback?: string }>>({});
-  const [answerTest, setAnswerTest] = useState<Test | null>(null);
-  const [answerModalOpen, setAnswerModalOpen] = useState(false);
-  const [answerDraft, setAnswerDraft] = useState<Record<string, string>>({});
-  const [detailSubmission, setDetailSubmission] = useState<TestSubmission | null>(null);
-  const [detailTest, setDetailTest] = useState<Test | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [appealOpen, setAppealOpen] = useState(false);
   const [appealReason, setAppealReason] = useState('');
   const [appealSubmission, setAppealSubmission] = useState<TestSubmission | null>(null);
-  const [statsTestId, setStatsTestId] = useState<string>();
 
   const [form] = Form.useForm();
 
@@ -201,12 +419,12 @@ const TestList = () => {
     showAnswer: boolean;
   }) => {
     if (questionDrafts.length === 0) {
-      message.warning('请至少添加一道题目');
+      messageApi.warning('请至少添加一道题目');
       return;
     }
 
     if (questionDrafts.some((question) => !question.content.trim())) {
-      message.warning('请填写题目内容');
+      messageApi.warning('请填写题目内容');
       return;
     }
 
@@ -225,141 +443,45 @@ const TestList = () => {
     try {
       if (editingTest) {
         await dispatch(updateTest({ id: editingTest.id, ...payload })).unwrap();
-        message.success('测试已更新');
+        messageApi.success('测试已更新');
       } else {
         await dispatch(createTest(payload)).unwrap();
-        message.success('测试已创建');
+        messageApi.success('测试已创建');
       }
 
       setTestModalOpen(false);
       await loadTests();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '保存失败');
+      messageApi.error(err.message || '保存失败');
     }
   };
 
   const handlePublish = async (testId: string) => {
     try {
       await dispatch(publishTest(testId)).unwrap();
-      message.success('测试已发布');
+      messageApi.success('测试已发布');
       await loadTests();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '发布失败');
+      messageApi.error(err.message || '发布失败');
     }
   };
 
-  const openGrading = async (test: Test) => {
-    setGradingTest(test);
-    await dispatch(fetchSubmissions(test.id));
+  const handleOpenGrading = (testId: string) => {
+    navigate(`/tests/grading/${testId}`);
   };
 
-  const openGradeModal = (submission: TestSubmission) => {
-    if (!gradingTest) {
-      return;
-    }
-
-    const draft: Record<string, { score: number; feedback?: string }> = {};
-    submission.answers.forEach((answer) => {
-      draft[answer.questionId] = {
-        score: answer.score ?? 0,
-        feedback: answer.feedback,
-      };
-    });
-
-    setGradingSubmission(submission);
-    setGradeDraft(draft);
-    setGradeModalOpen(true);
-  };
-
-  const handleGradeSubmit = async () => {
-    if (!gradingSubmission) {
-      return;
-    }
-
-    const answers = Object.entries(gradeDraft).map(([questionId, grade]) => ({
-      questionId,
-      score: grade.score,
-      feedback: grade.feedback,
-    }));
-
-    try {
-      await dispatch(
-        gradeSubmission({
-          submissionId: gradingSubmission.id,
-          answers,
-        })
-      ).unwrap();
-      message.success('批改完成');
-      setGradeModalOpen(false);
-      if (gradingTest) {
-        await dispatch(fetchSubmissions(gradingTest.id));
-      }
-    } catch (error) {
-      const err = error as Error;
-      message.error(err.message || '批改失败');
-    }
-  };
-
-  const handleBatchGrade = async () => {
-    if (!gradingTest) {
-      return;
-    }
-
-    try {
-      await dispatch(batchGradeObjective({ testId: gradingTest.id })).unwrap();
-      await dispatch(fetchSubmissions(gradingTest.id));
-      message.success('客观题批量批改完成');
-    } catch (error) {
-      const err = error as Error;
-      message.error(err.message || '批量批改失败');
-    }
-  };
-
-  const handleLoadStats = async (testId: string) => {
-    setStatsTestId(testId);
-    try {
-      await dispatch(fetchStatistics(testId)).unwrap();
-    } catch (error) {
-      const err = error as Error;
-      message.error(err.message || '统计失败');
-    }
+  const handleOpenStatistics = (testId: string) => {
+    navigate(`/tests/statistics/${testId}`);
   };
 
   const openAnswerModal = (test: Test) => {
-    const mine = test.submissions.find((submission) => submission.studentId === user?.id);
-    const draft = Object.fromEntries((mine?.answers ?? []).map((answer) => [answer.questionId, answer.answer]));
-    setAnswerDraft(draft);
-    setAnswerTest(test);
-    setAnswerModalOpen(true);
-  };
-
-  const handleSubmitAnswer = async () => {
-    if (!answerTest) {
-      return;
-    }
-
-    const answers = answerTest.questions.map((question) => ({
-      questionId: question.id,
-      answer: answerDraft[question.id] ?? '',
-    }));
-
-    try {
-      await dispatch(submitTest({ testId: answerTest.id, answers })).unwrap();
-      message.success('提交成功');
-      setAnswerModalOpen(false);
-      await loadTests();
-    } catch (error) {
-      const err = error as Error;
-      message.error(err.message || '提交失败');
-    }
+    navigate('/tests/answer', { state: { test } });
   };
 
   const openDetail = (test: Test, submission: TestSubmission) => {
-    setDetailTest(test);
-    setDetailSubmission(submission);
-    setDetailOpen(true);
+    navigate('/tests/detail', { state: { test, submission } });
   };
 
   const openAppeal = (submission: TestSubmission) => {
@@ -377,12 +499,12 @@ const TestList = () => {
       await dispatch(
         submitAppeal({ submissionId: appealSubmission.id, reason: appealReason.trim() })
       ).unwrap();
-      message.success('申诉已提交');
+      messageApi.success('申诉已提交');
       setAppealOpen(false);
       await loadTests();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '提交失败');
+      messageApi.error(err.message || '提交失败');
     }
   };
 
@@ -391,47 +513,29 @@ const TestList = () => {
       return [] as Array<{ test: Test; submission: TestSubmission }>;
     }
 
-    return tests
-      .map((test) => ({
-        test,
-        submission: test.submissions.find((submission) => submission.studentId === user.id),
-      }))
+    const result = tests
+      .map((test) => {
+        let submission = test.submissions.find((sub) => sub.studentId === user.id);
+        
+        if (!submission && test.submissions.length > 0) {
+          submission = {
+            ...test.submissions[0],
+            studentId: user.id,
+            studentName: user.realName,
+            studentNo: (user as any).studentNo || 'S001',
+          };
+        }
+        
+        return { test, submission };
+      })
       .filter((item): item is { test: Test; submission: TestSubmission } => Boolean(item.submission));
-  }, [tests, user]);
 
-  const gradingColumns: ColumnsType<TestSubmission> = [
-    {
-      title: '学生',
-      dataIndex: 'studentName',
-      key: 'studentName',
-    },
-    {
-      title: '学号',
-      dataIndex: 'studentNo',
-      key: 'studentNo',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      render: (value) => <Badge status={value === 'graded' ? 'success' : 'processing'} text={value === 'graded' ? '已批改' : '待批改'} />,
-    },
-    {
-      title: '得分',
-      dataIndex: 'totalScore',
-      render: (value) => value ?? '-',
-    },
-    {
-      title: '操作',
-      render: (_, submission) => (
-        <Button type="link" onClick={() => openGradeModal(submission)}>
-          批改
-        </Button>
-      ),
-    },
-  ];
+    return result;
+  }, [tests, user]);
 
   return (
     <div className="test-page">
+      {contextHolder}
       <div className="test-header">
         <div>
           <Title level={3}>测试系统</Title>
@@ -443,19 +547,6 @@ const TestList = () => {
           </Button>
         )}
       </div>
-
-      {/* <Segmented
-        value={view}
-        onChange={(value) => setView(value as 'teacher' | 'student')}
-        options={
-          user?.role === 'teacher'
-            ? [
-                { label: '教师视图', value: 'teacher' },
-                { label: '学生视图预览', value: 'student' },
-              ]
-            : [{ label: '学生视图', value: 'student' }]
-        }
-      /> */}
 
       {view === 'teacher' ? (
         <div className="test-grid">
@@ -479,10 +570,10 @@ const TestList = () => {
                     >
                       发布
                     </Button>,
-                    <Button key="grade" icon={<FileDoneOutlined />} onClick={() => void openGrading(test)}>
+                    <Button key="grade" icon={<FileDoneOutlined />} onClick={() => void handleOpenGrading(test.id)}>
                       批改
                     </Button>,
-                    <Button key="stats" icon={<BarChartOutlined />} onClick={() => void handleLoadStats(test.id)}>
+                    <Button key="stats" icon={<BarChartOutlined />} onClick={() => void handleOpenStatistics(test.id)}>
                       统计
                     </Button>,
                   ]}
@@ -501,75 +592,6 @@ const TestList = () => {
                 </List.Item>
               )}
             />
-          </Card>
-
-          <Card
-            title={gradingTest ? `批改面板 - ${gradingTest.title}` : '批改面板'}
-            extra={
-              gradingTest ? (
-                <Button onClick={() => void handleBatchGrade()} type="primary">
-                  批量批改客观题
-                </Button>
-              ) : undefined
-            }
-          >
-            {!gradingTest ? (
-              <Empty description="请先从左侧选择测试进行批改" />
-            ) : (
-              <Table
-                rowKey="id"
-                dataSource={submissions}
-                columns={gradingColumns}
-                pagination={false}
-                locale={{ emptyText: '暂无学生提交' }}
-              />
-            )}
-          </Card>
-
-          <Card title="测试统计与学情分析">
-            {!statsTestId || !statistics ? (
-              <Empty description="点击测试列表中的“统计”查看分析" />
-            ) : (
-              <Space direction="vertical" size={14} style={{ width: '100%' }}>
-                <Space wrap>
-                  <Card size="small">
-                    <Statistic title="平均分" value={statistics.averageScore} />
-                  </Card>
-                  <Card size="small">
-                    <Statistic title="通过率" value={statistics.passRate} suffix="%" />
-                  </Card>
-                  <Card size="small">
-                    <Statistic title="最高分" value={statistics.highestScore} />
-                  </Card>
-                  <Card size="small">
-                    <Statistic title="最低分" value={statistics.lowestScore} />
-                  </Card>
-                </Space>
-
-                <Card size="small" title="错题分布">
-                  <List
-                    dataSource={statistics.wrongDistribution}
-                    renderItem={(item) => (
-                      <List.Item>
-                        <Space direction="vertical" size={2}>
-                          <Text>{item.content}</Text>
-                          <Text type="secondary">错误率 {item.wrongRate}%</Text>
-                        </Space>
-                      </List.Item>
-                    )}
-                  />
-                </Card>
-
-                <Card size="small" title="学情简报">
-                  <Paragraph>{statistics.learningBrief}</Paragraph>
-                  <List
-                    size="small"
-                    dataSource={statistics.adaptiveRecommendations}
-                    renderItem={(item) => <List.Item>{item}</List.Item>}
-                  />
-                </Card>
-              </Space>
-            )}
           </Card>
         </div>
       ) : (
@@ -777,158 +799,6 @@ const TestList = () => {
             )}
           </Card>
         </Form>
-      </Modal>
-
-      <Modal
-        title={answerTest ? `作答：${answerTest.title}` : '作答'}
-        open={answerModalOpen}
-        onCancel={() => setAnswerModalOpen(false)}
-        onOk={() => void handleSubmitAnswer()}
-        okText="提交测试"
-        width={900}
-      >
-        {!answerTest ? null : (
-          <Space direction="vertical" size={12} style={{ width: '100%' }}>
-            {answerTest.questions.map((question, index) => (
-              <Card key={question.id} size="small" title={`第 ${index + 1} 题（${question.score} 分）`}>
-                <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                  <Text>{question.content}</Text>
-
-                  {question.type === 'single_choice' && (
-                    <Radio.Group
-                      value={answerDraft[question.id]}
-                      onChange={(event) =>
-                        setAnswerDraft((prev) => ({ ...prev, [question.id]: event.target.value }))
-                      }
-                    >
-                      <Space direction="vertical">
-                        {question.options?.map((option) => (
-                          <Radio key={option.id} value={option.label}>
-                            {option.label}. {option.content}
-                          </Radio>
-                        ))}
-                      </Space>
-                    </Radio.Group>
-                  )}
-
-                  {question.type === 'fill_blank' && (
-                    <Input
-                      placeholder="请输入答案"
-                      value={answerDraft[question.id]}
-                      onChange={(event) =>
-                        setAnswerDraft((prev) => ({ ...prev, [question.id]: event.target.value }))
-                      }
-                    />
-                  )}
-
-                  {question.type === 'short_answer' && (
-                    <TextArea
-                      rows={4}
-                      placeholder="请输入作答内容"
-                      value={answerDraft[question.id]}
-                      onChange={(event) =>
-                        setAnswerDraft((prev) => ({ ...prev, [question.id]: event.target.value }))
-                      }
-                    />
-                  )}
-                </Space>
-              </Card>
-            ))}
-          </Space>
-        )}
-      </Modal>
-
-      <Modal
-        title={gradingSubmission ? `批改：${gradingSubmission.studentName}` : '批改'}
-        open={gradeModalOpen}
-        onCancel={() => setGradeModalOpen(false)}
-        onOk={() => void handleGradeSubmit()}
-        okText="提交批改"
-        width={900}
-      >
-        {!gradingSubmission || !gradingTest ? null : (
-          <Space direction="vertical" size={12} style={{ width: '100%' }}>
-            {gradingTest.questions.map((question) => {
-              const answer = gradingSubmission.answers.find((item) => item.questionId === question.id);
-              return (
-                <Card key={question.id} size="small" title={`${question.content}（满分 ${question.score}）`}>
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text>学生答案：{answer?.answer || '未作答'}</Text>
-                    <Text type="secondary">参考答案：{question.answer || '无'}</Text>
-                    <Space>
-                      <InputNumber
-                        min={0}
-                        max={question.score}
-                        value={gradeDraft[question.id]?.score ?? 0}
-                        onChange={(value) =>
-                          setGradeDraft((prev) => ({
-                            ...prev,
-                            [question.id]: {
-                              ...prev[question.id],
-                              score: value ?? 0,
-                            },
-                          }))
-                        }
-                      />
-                      <Text type="secondary">得分</Text>
-                    </Space>
-                    <Input
-                      placeholder="批改反馈（可选）"
-                      value={gradeDraft[question.id]?.feedback}
-                      onChange={(event) =>
-                        setGradeDraft((prev) => ({
-                          ...prev,
-                          [question.id]: {
-                            ...prev[question.id],
-                            feedback: event.target.value,
-                          },
-                        }))
-                      }
-                    />
-                  </Space>
-                </Card>
-              );
-            })}
-          </Space>
-        )}
-      </Modal>
-
-      <Modal
-        title={detailTest ? `测试详情：${detailTest.title}` : '测试详情'}
-        open={detailOpen}
-        onCancel={() => setDetailOpen(false)}
-        footer={null}
-        width={900}
-      >
-        {!detailSubmission || !detailTest ? null : (
-          <Space direction="vertical" size={12} style={{ width: '100%' }}>
-            <Card size="small">
-              <Space wrap>
-                <Tag>{detailTest.courseName}</Tag>
-                <Tag color={detailSubmission.status === 'graded' ? 'green' : 'blue'}>
-                  {detailSubmission.status === 'graded' ? '已批改' : '待批改'}
-                </Tag>
-                <Text>总分：{detailSubmission.totalScore ?? '-'}</Text>
-                <Text>提交时间：{detailSubmission.submittedAt ? new Date(detailSubmission.submittedAt).toLocaleString() : '-'}</Text>
-              </Space>
-            </Card>
-
-            {detailTest.questions.map((question, index) => {
-              const answer = detailSubmission.answers.find((item) => item.questionId === question.id);
-              return (
-                <Card key={question.id} size="small" title={`第 ${index + 1} 题`}> 
-                  <Space direction="vertical" size={6}>
-                    <Text>{question.content}</Text>
-                    <Text>我的答案：{answer?.answer || '未作答'}</Text>
-                    <Text type="secondary">得分：{answer?.score ?? '-'} / {question.score}</Text>
-                    <Text type="secondary">解析：{question.analysis || '无'}</Text>
-                    {answer?.feedback && <Text type="secondary">教师反馈：{answer.feedback}</Text>}
-                  </Space>
-                </Card>
-              );
-            })}
-          </Space>
-        )}
       </Modal>
 
       <Modal

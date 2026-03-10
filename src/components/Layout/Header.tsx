@@ -8,6 +8,7 @@ import {
   CalendarOutlined,
   DashboardOutlined,
   ExperimentOutlined,
+  IdcardOutlined,
   LogoutOutlined,
   TeamOutlined,
   UserOutlined,
@@ -24,6 +25,11 @@ interface TopMenuItem {
   label: string;
   icon: ReactNode;
   roles: UserRole[];
+  children?: Array<{
+    key: string;
+    label: string;
+    icon?: ReactNode;
+  }>;
 }
 
 const topMenus: TopMenuItem[] = [
@@ -34,6 +40,24 @@ const topMenus: TopMenuItem[] = [
     roles: ['teacher', 'student', 'admin'],
   },
   {
+    key: '/personnel',
+    label: '人员管理',
+    icon: <TeamOutlined />,
+    roles: ['admin'],
+    children: [
+      {
+        key: '/personnel/students',
+        label: '学生',
+        icon: <UserOutlined />,
+      },
+      {
+        key: '/personnel/teachers',
+        label: '教师',
+        icon: <IdcardOutlined />,
+      },
+    ],
+  },
+  {
     key: '/courses',
     label: '课程系统',
     icon: <BookOutlined />,
@@ -42,8 +66,8 @@ const topMenus: TopMenuItem[] = [
   {
     key: '/students',
     label: '学生管理',
-    icon: <TeamOutlined />,
-    roles: [ 'admin'],
+    icon: <UserOutlined />,
+    roles: ['admin'],
   },
   {
     key: '/schedule',
@@ -103,8 +127,20 @@ const Header = () => {
         return location.pathname === '/';
       }
 
+      if (menu.children?.some((child) => location.pathname.startsWith(child.key))) {
+        return true;
+      }
+
       return location.pathname.startsWith(menu.key);
-    })?.key ?? '/';
+    })?.children?.find((child) => location.pathname.startsWith(child.key))?.key
+      ?? visibleMenus.find((menu) => {
+        if (menu.key === '/') {
+          return location.pathname === '/';
+        }
+
+        return location.pathname.startsWith(menu.key);
+      })?.key
+      ?? '/';
 
   const userMenuItems: MenuProps['items'] = [
     {
@@ -134,6 +170,7 @@ const Header = () => {
               key: menu.key,
               icon: menu.icon,
               label: menu.label,
+              children: menu.children,
             }))}
             onClick={({ key }) => navigate(key)}
             className="top-nav-menu"

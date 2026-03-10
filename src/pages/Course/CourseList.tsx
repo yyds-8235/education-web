@@ -1,4 +1,4 @@
-﻿﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Card,
@@ -25,12 +25,12 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { mockStudents } from '@/mock/users';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   addStudentsToCourse,
   deleteCourse,
   fetchCourses,
+  fetchCourseCandidateStudents,
   fetchCourseStudents,
   removeStudentFromCourse,
   studentJoinCourse,
@@ -46,7 +46,8 @@ const CourseList = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { courses, loading, total, students } = useAppSelector((state) => state.course);
+  const { courses, loading, total, students, candidateStudents } = useAppSelector((state) => state.course);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const [keyword, setKeyword] = useState('');
   const [scope, setScope] = useState<StudentScope>('joined');
@@ -56,15 +57,21 @@ const CourseList = () => {
 
   const loadCourses = async (nextKeyword = keyword, nextScope = scope) => {
     const queryScope = user?.role === 'teacher' ? 'mine' : nextScope;
+    try {      
+      await dispatch(
+        fetchCourses({
+          page: 1,
+          pageSize: 12,
+          keyword: nextKeyword,
+          scope: queryScope,
+        })
+      );
+      } catch (error) {
+              console.log(error);
 
-    await dispatch(
-      fetchCourses({
-        page: 1,
-        pageSize: 12,
-        keyword: nextKeyword,
-        scope: queryScope,
-      })
-    );
+      const err = error as Error;
+      messageApi.error(err.message || '查询失败');
+    }
   };
 
   useEffect(() => {
@@ -79,23 +86,23 @@ const CourseList = () => {
   const handleDeleteCourse = async (courseId: string) => {
     try {
       await dispatch(deleteCourse(courseId)).unwrap();
-      message.success('课程已删除');
+      messageApi.success('课程已删除');
       await loadCourses();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '删除失败');
+      messageApi.error(err.message || '删除失败');
     }
   };
 
   const handleJoinCourse = async (courseId: string) => {
     try {
       await dispatch(studentJoinCourse(courseId)).unwrap();
-      message.success('加入课程成功');
+      messageApi.success('加入课程成功');
       setScope('joined');
       await loadCourses(keyword, 'joined');
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '加入课程失败');
+      messageApi.error(err.message || '加入课程失败');
     }
   };
 
@@ -104,12 +111,8 @@ const CourseList = () => {
     setStudentModalOpen(true);
     setSelectedStudentIds([]);
     await dispatch(fetchCourseStudents(course.id));
+    await dispatch(fetchCourseCandidateStudents(course.id));
   };
-
-  const candidateStudents = useMemo(() => {
-    const joinedSet = new Set(students.map((item) => item.studentId));
-    return mockStudents.filter((item) => !joinedSet.has(item.id));
-  }, [students]);
 
   const handleAddStudents = async () => {
     if (!selectedCourse || selectedStudentIds.length === 0) {
@@ -123,13 +126,14 @@ const CourseList = () => {
           studentIds: selectedStudentIds,
         })
       ).unwrap();
-      message.success('已拉取学生加入课程');
+      messageApi.success('已拉取学生加入课程');
       setSelectedStudentIds([]);
       await dispatch(fetchCourseStudents(selectedCourse.id));
+      await dispatch(fetchCourseCandidateStudents(selectedCourse.id));
       await loadCourses();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '操作失败');
+      messageApi.error(err.message || '操作失败');
     }
   };
 
@@ -140,17 +144,19 @@ const CourseList = () => {
 
     try {
       await dispatch(removeStudentFromCourse({ courseId: selectedCourse.id, studentId })).unwrap();
-      message.success('已移除学生');
+      messageApi.success('已移除学生');
       await dispatch(fetchCourseStudents(selectedCourse.id));
+      await dispatch(fetchCourseCandidateStudents(selectedCourse.id));
       await loadCourses();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '移除失败');
+      messageApi.error(err.message || '移除失败');
     }
   };
 
   return (
     <div className="course-list-page">
+      {contextHolder}
       <div className="page-header">
         <div>
           <Title level={3} className="page-title">
@@ -234,7 +240,7 @@ const CourseList = () => {
                       </Button>
                       <Popconfirm
                         title="确认删除课程？"
-                        description="删除后课程与章节内容将从本地演示数据移除。"
+                        description="删除后课程、章节和课件关联将从系统中移除。"
                         okText="删除"
                         cancelText="取消"
                         onConfirm={() => void handleDeleteCourse(course.id)}
@@ -277,7 +283,7 @@ const CourseList = () => {
               value={selectedStudentIds}
               onChange={setSelectedStudentIds}
               options={candidateStudents.map((student) => ({
-                label: `${student.realName} (${student.username})`,
+                label: `${student.realName} (${student.studentNo})`,
                 value: student.id,
               }))}
             />

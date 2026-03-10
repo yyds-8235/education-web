@@ -1,4 +1,5 @@
 export type CourseVisibility = 'public' | 'private' | 'class_only';
+export type CourseStatus = 'active' | 'archived' | 'draft';
 
 export interface Course {
     id: string;
@@ -13,7 +14,7 @@ export interface Course {
     coverImage?: string;
     chapters: CourseChapter[];
     studentCount: number;
-    status: 'active' | 'archived' | 'draft';
+    status: CourseStatus;
     createdAt: string;
     updatedAt: string;
 }
@@ -34,6 +35,8 @@ export interface CourseResource {
     name: string;
     type: 'video' | 'ppt' | 'word' | 'pdf' | 'other';
     url: string;
+    bucketName?: string;
+    objectKey?: string;
     size: number;
     duration?: number;
     order: number;
@@ -58,7 +61,7 @@ export interface CreateCourseParams {
     subject: string;
     visibility: CourseVisibility;
     coverImage?: string;
-    status?: 'active' | 'archived' | 'draft';
+    status?: CourseStatus;
     chapters?: Array<{
         id?: string;
         title: string;
@@ -68,6 +71,8 @@ export interface CreateCourseParams {
             name: string;
             type: CourseResource['type'];
             url: string;
+            bucketName?: string;
+            objectKey?: string;
             size: number;
         }>;
     }>;
@@ -84,6 +89,15 @@ export interface CourseQueryParams {
     class?: string;
     subject?: string;
     keyword?: string;
-    status?: 'active' | 'archived' | 'draft';
+    status?: CourseStatus;
     scope?: 'mine' | 'joined' | 'discover' | 'all';
+}
+
+export interface CourseSelectableStudent {
+    id: string;
+    username: string;
+    realName: string;
+    studentNo: string;
+    grade?: string;
+    class?: string;
 }

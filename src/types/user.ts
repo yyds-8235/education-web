@@ -1,4 +1,7 @@
 export type UserRole = 'teacher' | 'student' | 'admin';
+export type UserStatus = 'active' | 'inactive' | 'suspended';
+export type ManagedUserRole = 'student' | 'teacher';
+export type ManagedRole = ManagedUserRole;
 
 export interface User {
     id: string;
@@ -8,7 +11,7 @@ export interface User {
     phone?: string;
     avatar?: string;
     role: UserRole;
-    status: 'active' | 'inactive' | 'suspended';
+    status: UserStatus;
     createdAt: string;
     updatedAt: string;
 }
@@ -50,3 +53,32 @@ export interface AuthState {
     isAuthenticated: boolean;
     loading: boolean;
 }
+
+export interface ManagedUserBase {
+    id: string;
+    username: string;
+    real_name: string;
+    email: string;
+    phone: string;
+    avatar?: string;
+    role: ManagedUserRole;
+    status: UserStatus;
+    created_at: string;
+}
+
+export interface ManagedStudent extends ManagedUserBase {
+    role: 'student';
+    student_no: string;
+    grade: string;
+    class_name: string;
+    guardian: string;
+}
+
+export interface ManagedTeacher extends ManagedUserBase {
+    role: 'teacher';
+    teacher_no: string;
+    department: string;
+    subjects_json: string[];
+}
+
+export type ManagedUser = ManagedStudent | ManagedTeacher;

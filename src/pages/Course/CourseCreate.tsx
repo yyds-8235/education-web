@@ -1,4 +1,4 @@
-﻿﻿import { useEffect, useMemo, useState } from 'react';
+﻿﻿﻿﻿import { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
@@ -11,12 +11,13 @@ import {
   Typography,
   message,
 } from 'antd';
-import type { UploadFile } from 'antd';
+import type { UploadProps } from 'antd';
 import { DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { createCourse, updateCourse } from '@/store/slices/courseSlice';
+import { createCourse, fetchCourseById, updateCourse } from '@/store/slices/courseSlice';
 import type { CourseResource, CreateCourseParams } from '@/types';
+import { uploadTeacherCourseResourceApi } from '@/services/course';
 import { generateId } from '@/utils/generator';
 import './CourseCreate.css';
 
@@ -24,7 +25,7 @@ const { TextArea } = Input;
 const { Title, Text } = Typography;
 
 const gradeOptions = ['初一', '初二', '初三', '高一', '高二', '高三'];
-const classOptions = ['1班', '2班', '3班', '4班', '选修'];
+const classOptions = ['1班', '2班', '3班', '4班'];
 const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '多媒体', '日语'];
 
 type DraftResource = {
@@ -33,6 +34,8 @@ type DraftResource = {
   type: CourseResource['type'];
   size: number;
   url: string;
+  bucketName?: string;
+  objectKey?: string;
 };
 
 type DraftChapter = {
@@ -71,13 +74,19 @@ const CourseCreate = () => {
   const [form] = Form.useForm();
   const [chapters, setChapters] = useState<DraftChapter[]>([]);
   const [saving, setSaving] = useState(false);
-  const { allCourses } = useAppSelector((state) => state.course);
+  const { allCourses, currentCourse } = useAppSelector((state) => state.course);
   const [messageApi, contextHolder] = message.useMessage();
 
   const editingCourse = useMemo(
-    () => allCourses.find((course) => course.id === id),
-    [allCourses, id]
+    () => currentCourse?.id === id ? currentCourse : allCourses.find((course) => course.id === id),
+    [allCourses, currentCourse, id]
   );
+
+  useEffect(() => {
+    if (isEdit && id) {
+      void dispatch(fetchCourseById(id));
+    }
+  }, [dispatch, id, isEdit]);
 
   useEffect(() => {
     if (!isEdit || !editingCourse) {
@@ -134,27 +143,42 @@ const CourseCreate = () => {
     setChapters((prev) => prev.filter((chapter) => chapter.id !== chapterId));
   };
 
-  const addResources = (chapterId: string, files: UploadFile[]) => {
-    const mapped: DraftResource[] = files
-      .filter((file) => file.originFileObj)
-      .map((file) => ({
-        id: generateId(),
-        name: file.name,
-        type: mapFileType(file.name),
-        size: file.size ?? 0,
-        url: `/mock/uploads/${file.name}`,
-      }));
-
+  const addUploadedResource = (chapterId: string, resource: DraftResource) => {
     setChapters((prev) =>
       prev.map((chapter) =>
         chapter.id === chapterId
           ? {
               ...chapter,
-              resources: [...chapter.resources, ...mapped],
+              resources: [...chapter.resources, resource],
             }
           : chapter
       )
     );
+  };
+
+  const buildUploadHandler = (chapterId: string): UploadProps['customRequest'] => async ({
+    file,
+    onError,
+    onSuccess,
+  }) => {
+    try {
+      const response = await uploadTeacherCourseResourceApi(file as File);
+      addUploadedResource(chapterId, {
+        id: response.id ?? generateId(),
+        name: response.name,
+        type: response.type ?? mapFileType(response.name),
+        size: response.size,
+        url: response.url,
+        bucketName: response.bucketName,
+        objectKey: response.objectKey,
+      });
+      onSuccess?.(response);
+      messageApi.success(`${response.name} 上传成功`);
+    } catch (error) {
+      const err = error as Error;
+      messageApi.error(err.message || '文件上传失败');
+      onError?.(err);
+    }
   };
 
   const removeResource = (chapterId: string, resourceId: string) => {
@@ -262,8 +286,7 @@ const CourseCreate = () => {
                 options={[
                   { label: '草稿', value: 'draft' },
                   { label: '进行中', value: 'active' },
-                  { label: '已暂停', value: 'pending' },
-                  { label: '已结课', value: 'finished' },
+                  { label: '已归档', value: 'archived' },
                 ]}
               />
             </Form.Item>
@@ -317,9 +340,8 @@ const CourseCreate = () => {
 
                       <Upload
                         multiple
-                        beforeUpload={() => false}
+                        customRequest={buildUploadHandler(chapter.id)}
                         showUploadList={false}
-                        onChange={({ fileList }) => addResources(chapter.id, fileList)}
                         accept=".mp4,.mov,.webm,.ppt,.pptx,.doc,.docx,.pdf"
                       >
                         <Button icon={<UploadOutlined />}>导入教学文件</Button>

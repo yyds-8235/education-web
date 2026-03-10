@@ -2,6 +2,7 @@ import { createHashRouter, Navigate } from 'react-router-dom';
 import { MainLayout } from '@/components/Layout';
 import {
   Login,
+  AdminLogin,
   CourseList,
   CourseDetail,
   CourseCreate,
@@ -16,12 +17,24 @@ import {
   Analytics,
   StudentManagement,
   Dashboard,
+  StudentListPage,
+  StudentCreatePage,
+  StudentDetailPage,
+  StudentEditPage,
+  TeacherListPage,
+  TeacherCreatePage,
+  TeacherDetailPage,
+  TeacherEditPage,
 } from '@/pages';
 
 export const router = createHashRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/admin-login',
+    element: <AdminLogin />,
   },
   {
     path: '/',
@@ -82,6 +95,38 @@ export const router = createHashRouter([
       {
         path: 'analytics',
         element: <Analytics />,
+      },
+      {
+        path: 'personnel/students',
+        element: <StudentListPage />,
+      },
+      {
+        path: 'personnel/students/new',
+        element: <StudentCreatePage />,
+      },
+      {
+        path: 'personnel/students/:id',
+        element: <StudentDetailPage />,
+      },
+      {
+        path: 'personnel/students/:id/edit',
+        element: <StudentEditPage />,
+      },
+      {
+        path: 'personnel/teachers',
+        element: <TeacherListPage />,
+      },
+      {
+        path: 'personnel/teachers/new',
+        element: <TeacherCreatePage />,
+      },
+      {
+        path: 'personnel/teachers/:id',
+        element: <TeacherDetailPage />,
+      },
+      {
+        path: 'personnel/teachers/:id/edit',
+        element: <TeacherEditPage />,
       },
       {
         path: 'students',

@@ -62,6 +62,22 @@ const initialPeriods: PeriodSlot[] = [
 const gradeOptions = ['初一', '初二', '初三', '高一', '高二', '高三'];
 const classOptions = ['1班', '2班', '3班', '4班'];
 const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '多媒体', '日语'];
+const teacher = [
+  {teacher: '李老师',subject: '语文'},{teacher: '张老师',subject: '数学'},{teacher: '王老师',subject: '英语'},
+  {teacher: '王老师',subject: '日语'},{teacher: '周老师',subject: '物理'},{teacher: '陈老师',subject: '多媒体'},
+  {teacher: '孙老师',subject: '语文'},{teacher: '韩老师',subject: '数学'},{teacher: '刘老师',subject: '化学'},
+  {teacher: '朱老师',subject: '日语'},{teacher: '赵老师',subject: '物理'},{teacher: '吴老师',subject: '英语'},
+  {teacher: '吕老师',subject: '语文'},{teacher: '蒋老师',subject: '数学'},{teacher: '郑老师',subject: '多媒体'},
+  {teacher: '褚老师',subject: '化学'},{teacher: '沈老师',subject: '物理'},{teacher: '孔老师',subject: '英语'},
+  {teacher: '施老师',subject: '日语'},{teacher: '严老师',subject: '数学'},{teacher: '曹老师',subject: '多媒体'}
+]
+const classroom = ['A101','A102','A103','A105',
+  'A201','A202','A203','A205',
+  'B101','B102','B103','B105',
+  'B201','B202','B203','B205',
+  'C101','C102','C103','C105',
+  'C201','C202','C203','C205',
+]
 
 const initialEntries: TimetableEntry[] = [
   { id: 'g1c1-1-1', grade: '初一', className: '1班', day: 1, period: 1, subject: '语文', teacher: '李老师', classroom: 'A101' },
@@ -92,50 +108,161 @@ const initialEntries: TimetableEntry[] = [
   { id: 'g1c1-5-4', grade: '初一', className: '1班', day: 5, period: 4, subject: '多媒体', teacher: '周老师', classroom: '机房2' },
 ];
 
-const autoScheduleData: TimetableEntry[] = [
-  { id: 'auto-1-1', grade: '初一', className: '2班', day: 1, period: 1, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'auto-1-2', grade: '初一', className: '2班', day: 1, period: 2, subject: '数学', teacher: '张老师', classroom: 'A102' },
-  { id: 'auto-1-3', grade: '初一', className: '2班', day: 1, period: 3, subject: '英语', teacher: '王老师', classroom: 'A103' },
-  { id: 'auto-1-4', grade: '初一', className: '2班', day: 1, period: 4, subject: '物理', teacher: '陈老师', classroom: 'A201' },
-  { id: 'auto-1-5', grade: '初一', className: '2班', day: 1, period: 5, subject: '化学', teacher: '郑老师', classroom: '实验楼1' },
-  { id: 'auto-1-6', grade: '初一', className: '2班', day: 1, period: 6, subject: '多媒体', teacher: '周老师', classroom: '机房1' },
-  { id: 'auto-1-7', grade: '初一', className: '2班', day: 1, period: 7, subject: '日语', teacher: '孙老师', classroom: 'A104' },
-  { id: 'auto-1-8', grade: '初一', className: '2班', day: 1, period: 8, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'auto-2-1', grade: '初一', className: '2班', day: 2, period: 1, subject: '数学', teacher: '张老师', classroom: 'A102' },
-  { id: 'auto-2-2', grade: '初一', className: '2班', day: 2, period: 2, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'auto-2-3', grade: '初一', className: '2班', day: 2, period: 3, subject: '英语', teacher: '王老师', classroom: 'A103' },
-  { id: 'auto-2-4', grade: '初一', className: '2班', day: 2, period: 4, subject: '物理', teacher: '陈老师', classroom: 'A201' },
-  { id: 'auto-2-5', grade: '初一', className: '2班', day: 2, period: 5, subject: '化学', teacher: '郑老师', classroom: '实验楼1' },
-  { id: 'auto-2-6', grade: '初一', className: '2班', day: 2, period: 6, subject: '多媒体', teacher: '吴老师', classroom: '机房2' },
-  { id: 'auto-2-7', grade: '初一', className: '2班', day: 2, period: 7, subject: '日语', teacher: '何老师', classroom: 'A104' },
-  { id: 'auto-2-8', grade: '初一', className: '2班', day: 2, period: 8, subject: '数学', teacher: '张老师', classroom: 'A102' },
-  { id: 'auto-3-1', grade: '初一', className: '2班', day: 3, period: 1, subject: '英语', teacher: '王老师', classroom: 'A103' },
-  { id: 'auto-3-2', grade: '初一', className: '2班', day: 3, period: 2, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'auto-3-3', grade: '初一', className: '2班', day: 3, period: 3, subject: '数学', teacher: '张老师', classroom: 'A102' },
-  { id: 'auto-3-4', grade: '初一', className: '2班', day: 3, period: 4, subject: '物理', teacher: '陈老师', classroom: 'A201' },
-  { id: 'auto-3-5', grade: '初一', className: '2班', day: 3, period: 5, subject: '化学', teacher: '郑老师', classroom: '实验楼1' },
-  { id: 'auto-3-6', grade: '初一', className: '2班', day: 3, period: 6, subject: '多媒体', teacher: '刘老师', classroom: '机房1' },
-  { id: 'auto-3-7', grade: '初一', className: '2班', day: 3, period: 7, subject: '日语', teacher: '孙老师', classroom: 'A104' },
-  { id: 'auto-3-8', grade: '初一', className: '2班', day: 3, period: 8, subject: '英语', teacher: '王老师', classroom: 'A103' },
-  { id: 'auto-4-1', grade: '初一', className: '2班', day: 4, period: 1, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'auto-4-2', grade: '初一', className: '2班', day: 4, period: 2, subject: '数学', teacher: '张老师', classroom: 'A102' },
-  { id: 'auto-4-3', grade: '初一', className: '2班', day: 4, period: 3, subject: '英语', teacher: '王老师', classroom: 'A103' },
-  { id: 'auto-4-4', grade: '初一', className: '2班', day: 4, period: 4, subject: '物理', teacher: '陈老师', classroom: 'A201' },
-  { id: 'auto-4-5', grade: '初一', className: '2班', day: 4, period: 5, subject: '化学', teacher: '郑老师', classroom: '实验楼1' },
-  { id: 'auto-4-6', grade: '初一', className: '2班', day: 4, period: 6, subject: '多媒体', teacher: '周老师', classroom: '机房2' },
-  { id: 'auto-4-7', grade: '初一', className: '2班', day: 4, period: 7, subject: '日语', teacher: '何老师', classroom: 'A104' },
-  { id: 'auto-4-8', grade: '初一', className: '2班', day: 4, period: 8, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'auto-5-1', grade: '初一', className: '2班', day: 5, period: 1, subject: '数学', teacher: '张老师', classroom: 'A102' },
-  { id: 'auto-5-2', grade: '初一', className: '2班', day: 5, period: 2, subject: '语文', teacher: '李老师', classroom: 'A101' },
-  { id: 'auto-5-3', grade: '初一', className: '2班', day: 5, period: 3, subject: '英语', teacher: '王老师', classroom: 'A103' },
-  { id: 'auto-5-4', grade: '初一', className: '2班', day: 5, period: 4, subject: '物理', teacher: '陈老师', classroom: 'A201' },
-  { id: 'auto-5-5', grade: '初一', className: '2班', day: 5, period: 5, subject: '化学', teacher: '郑老师', classroom: '实验楼1' },
-  { id: 'auto-5-6', grade: '初一', className: '2班', day: 5, period: 6, subject: '多媒体', teacher: '吴老师', classroom: '机房1' },
-  { id: 'auto-5-7', grade: '初一', className: '2班', day: 5, period: 7, subject: '日语', teacher: '孙老师', classroom: 'A104' },
-  { id: 'auto-5-8', grade: '初一', className: '2班', day: 5, period: 8, subject: '数学', teacher: '张老师', classroom: 'A102' },
-];
+const pickRandom = <T,>(list: T[]): T => list[Math.floor(Math.random() * list.length)];
+
+const generateAutoScheduleData = (
+  grade: string,
+  className: string,
+  periods: PeriodSlot[]
+): TimetableEntry[] => {
+  const batchId = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+  let index = 0;
+
+  return days
+    .filter((day) => day.value <= 5)
+    .flatMap((day) =>
+    periods.map((period) => {
+      const subject = pickRandom(subjectOptions);
+      const teachersBySubject = teacher.filter((item) => item.subject === subject);
+      const teacherName = (teachersBySubject.length > 0 ? pickRandom(teachersBySubject) : pickRandom(teacher)).teacher;
+
+      index += 1;
+      return {
+        id: `auto-${batchId}-${index}`,
+        grade,
+        className,
+        day: day.value,
+        period: period.index,
+        subject,
+        teacher: teacherName,
+        classroom: pickRandom(classroom),
+      };
+    })
+    );
+};
 
 const makeCellKey = (day: DayValue, period: number) => `${day}-${period}`;
+
+const escapeXml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+const buildScheduleExcelXml = (params: {
+  title: string;
+  exportTime: string;
+  exportDays: Array<{ label: string; value: DayValue }>;
+  periods: PeriodSlot[];
+  map: Map<string, TimetableEntry>;
+}) => {
+  const { title, exportTime, exportDays, periods, map } = params;
+  const expandedColumnCount = exportDays.length + 1;
+  const expandedRowCount = periods.length + 3;
+
+  const columnXml = [
+    '<Column ss:Width="130"/>',
+    ...exportDays.map(() => '<Column ss:Width="120"/>'),
+  ].join('');
+
+  const headerXml = [
+    '<Cell ss:StyleID="header"><Data ss:Type="String">节次 / 时间</Data></Cell>',
+    ...exportDays.map(
+      (day) => `<Cell ss:StyleID="header"><Data ss:Type="String">${escapeXml(day.label)}</Data></Cell>`
+    ),
+  ].join('');
+
+  const rowsXml = periods
+    .map((period) => {
+      const firstColText = `第${period.index}节 ${period.start}-${period.end}`;
+      const courseCols = exportDays.map((day) => {
+        const entry = map.get(makeCellKey(day.value, period.index));
+        const courseText = entry ? `${entry.subject}\n${entry.teacher}\n${entry.classroom}` : '';
+        const xmlSafeText = escapeXml(courseText).replace(/\n/g, '&#10;');
+        return `<Cell ss:StyleID="course"><Data ss:Type="String">${xmlSafeText}</Data></Cell>`;
+      });
+
+      return `<Row>
+        <Cell ss:StyleID="time"><Data ss:Type="String">${escapeXml(firstColText)}</Data></Cell>
+        ${courseCols.join('')}
+      </Row>`;
+    })
+    .join('');
+
+  return `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal">
+      <Alignment ss:Vertical="Center" ss:Horizontal="Center"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+        <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+        <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+        <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+      </Borders>
+      <Font ss:FontName="Microsoft YaHei" ss:Size="10"/>
+    </Style>
+    <Style ss:ID="title">
+      <Font ss:FontName="Microsoft YaHei" ss:Size="15" ss:Bold="1" ss:Color="#1F2D3D"/>
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Interior ss:Color="#DCE6F1" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="meta">
+      <Font ss:FontName="Microsoft YaHei" ss:Size="10" ss:Color="#6B7280"/>
+      <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+      <Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="header">
+      <Font ss:FontName="Microsoft YaHei" ss:Size="11" ss:Bold="1" ss:Color="#FFFFFF"/>
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Interior ss:Color="#4F81BD" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="time">
+      <Font ss:FontName="Microsoft YaHei" ss:Size="10" ss:Bold="1" ss:Color="#1F2937"/>
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Interior ss:Color="#EAF2FF" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="course">
+      <Font ss:FontName="Microsoft YaHei" ss:Size="10" ss:Color="#111827"/>
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+      <Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="${escapeXml(title.slice(0, 31))}">
+    <Table ss:ExpandedColumnCount="${expandedColumnCount}" ss:ExpandedRowCount="${expandedRowCount}" x:FullColumns="1" x:FullRows="1" ss:DefaultRowHeight="46">
+      ${columnXml}
+      <Row ss:Height="30">
+        <Cell ss:MergeAcross="${exportDays.length}" ss:StyleID="title">
+          <Data ss:Type="String">${escapeXml(title)}</Data>
+        </Cell>
+      </Row>
+      <Row ss:Height="24">
+        <Cell ss:MergeAcross="${exportDays.length}" ss:StyleID="meta">
+          <Data ss:Type="String">${escapeXml(`导出时间：${exportTime}`)}</Data>
+        </Cell>
+      </Row>
+      <Row ss:Height="26">
+        ${headerXml}
+      </Row>
+      ${rowsXml}
+    </Table>
+    <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+      <Selected/>
+      <FreezePanes/>
+      <FrozenNoSplit/>
+      <SplitHorizontal>3</SplitHorizontal>
+      <TopRowBottomPane>3</TopRowBottomPane>
+    </WorksheetOptions>
+  </Worksheet>
+</Workbook>`;
+};
 
 const Schedule = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -257,19 +384,42 @@ const Schedule = () => {
   };
 
   const handleExportExcel = () => {
-    messageApi.success(`已导出 ${selectedGrade}${selectedClass} 一周课程表（Excel）`);
+    const exportDays = days.filter((day) => day.value <= 5);
+    const exportTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
+    const suffix = selectedSubject === 'all' ? '' : `（${selectedSubject}）`;
+    const title = `${selectedGrade}${selectedClass}课程表${suffix}`;
+    const xml = buildScheduleExcelXml({
+      title,
+      exportTime,
+      exportDays,
+      periods,
+      map: displayMap,
+    });
+
+    const fileName = `${title}-${dayjs().format('YYYYMMDD-HHmmss')}.xls`;
+    const blob = new Blob([`\ufeff${xml}`], {
+      type: 'application/vnd.ms-excel;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+
+    messageApi.success(`已导出 ${title}（Excel）`);
   };
 
   const handleAutoSchedule = () => {
-    const filteredData = autoScheduleData.filter(
-      (item) => item.grade === selectedGrade && item.className === selectedClass
-    );
-    
+    const autoScheduleData = generateAutoScheduleData(selectedGrade, selectedClass, periods);
+
     setEntries((prev) => {
       const otherEntries = prev.filter(
         (item) => !(item.grade === selectedGrade && item.className === selectedClass)
       );
-      return [...otherEntries, ...filteredData];
+      return [...otherEntries, ...autoScheduleData];
     });
 
     messageApi.success(`已为 ${selectedGrade}${selectedClass} 自动排课完成`);

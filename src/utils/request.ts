@@ -1,6 +1,5 @@
 import axios from 'axios';
 import type { ApiResponse } from '@/types';
-import { message } from 'antd';
 
 // 创建axios实例
 const request = axios.create({

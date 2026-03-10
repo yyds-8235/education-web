@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, Card, Form, Input, Space, Typography, message } from 'antd';
+import { Button, Card, Form, Input, Typography, message } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
+import loginBackground from '@/static/login.png';
 import './Login.css';
 
-const { Title, Text } = Typography;
+const { Paragraph, Text, Title } = Typography;
 
 const demoAccounts = [
   { label: '教务处账号', username: 'admin', password: '123456' },
-  { label: '教师账号', username: 'teacher01', password: '123456' },
-  { label: '学生账号', username: 'student01', password: '123456' },
+  { label: '教师账号', username: 'tch0001', password: '123456' },
+  { label: '学生账号', username: 'stu10001', password: '123456' },
 ];
 
 const Login = () => {
@@ -49,57 +50,90 @@ const Login = () => {
   return (
     <div className="login-page">
       {contextHolder}
-      <Card className="login-card" bordered={false}>
-        <Space direction="vertical" size={8} className="login-title-wrap">
-          <Title level={3} className="login-title">
-            教学平台登录
+      <div className="login-shell">
+        <section className="login-hero-panel" style={{
+          backgroundImage: `url(${loginBackground})`,
+          // 以下是新增属性：
+          backgroundSize: 'cover',      // 核心：撑满并覆盖
+          }}>
+          <div className="login-hero-backdrop" />
+          <div className="login-hero-content">
+          <div className="login-hero-badge">Education Management System</div>
+          <Title className="login-hero-title">
+            智慧教学平台
           </Title>
-          <Text type="secondary">支持教务处、教师端与学生端演示，默认密码均为 123456。</Text>
-        </Space>
+          <Paragraph className="login-hero-description">
+            极简白灰基底、专业字体与皇家蓝主按钮，适配教务处、教师端与学生端的统一登录体验。
+          </Paragraph>
+          </div>
+        </section>
 
-        <Alert
-          className="login-alert"
-          type="info"
-          showIcon
-          message="演示账号"
-          description="admin / 123456（教务处），teacher01 / 123456（教师），student01 / 123456（学生）"
-        />
+        <Card className="login-card" bordered={false}>
+          <div className="login-card-head">
+            <Text className="login-card-kicker">Welcome Back</Text>
+            <Title level={2} className="login-title">
+              账号登录
+            </Title>
+            <Paragraph className="login-subtitle">
+              请输入 username 和 password 进入系统。
+            </Paragraph>
+          </div>
 
-        <Space wrap className="login-demo-buttons">
-          {demoAccounts.map((item) => (
-            <Button
-              key={item.label}
-              onClick={() => handleFillDemo(item.username, item.password)}
-              size="small"
+          <div className="login-demo-buttons">
+            {demoAccounts.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                className="login-demo-chip"
+                onClick={() => handleFillDemo(item.username, item.password)}
+              >
+                <span>{item.label}</span>
+                <small>{item.username}</small>
+              </button>
+            ))}
+          </div>
+
+          <Form
+            form={form}
+            className="login-form"
+            onFinish={handleSubmit}
+            autoComplete="off"
+            size="large"
+            initialValues={{ username: 'teacher01', password: '123456' }}
+          >
+            <Form.Item
+              label={<span className="login-field-label">Username</span>}
+              name="username"
+              rules={[{ required: true, message: '请输入用户名' }]}
             >
-              填入{item.label}
-            </Button>
-          ))}
-        </Space>
+              <Input prefix={<UserOutlined />} placeholder="请输入 username" className="login-input" />
+            </Form.Item>
 
-        <Form
-          form={form}
-          className="login-form"
-          onFinish={handleSubmit}
-          autoComplete="off"
-          size="large"
-          initialValues={{ username: 'teacher01', password: '123456' }}
-        >
-          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input prefix={<UserOutlined />} placeholder="用户名" />
-          </Form.Item>
+            <Form.Item
+              label={<span className="login-field-label">Password</span>}
+              name="password"
+              rules={[{ required: true, message: '请输入密码' }]}
+            >
+              <Input.Password prefix={<LockOutlined />} placeholder="请输入 password" className="login-input" />
+            </Form.Item>
 
-          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
-          </Form.Item>
+            <Form.Item className="login-submit-wrap">
+              <Button type="primary" htmlType="submit" loading={loading} block className="login-submit-button">
+                登录系统
+              </Button>
+            </Form.Item>
+          </Form>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading} block>
-              登录
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
+          <div className="login-footer-note">
+            <span className="login-note-dot" />
+            <Text type="secondary">教育成就未来</Text>
+          </div>
+
+          <Link to="/admin-login" className="login-admin-link">
+            前往教务处管理员专属登录
+          </Link>
+        </Card>
+      </div>
     </div>
   );
 };

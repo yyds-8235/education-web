@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Card,
@@ -25,12 +25,12 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { mockStudents } from '@/mock/users';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   addStudentsToCourse,
   deleteCourse,
   fetchCourses,
+  fetchCourseCandidateStudents,
   fetchCourseStudents,
   removeStudentFromCourse,
   studentJoinCourse,
@@ -46,7 +46,7 @@ const CourseList = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { courses, loading, total, students } = useAppSelector((state) => state.course);
+  const { courses, loading, total, students, candidateStudents } = useAppSelector((state) => state.course);
   const [messageApi, contextHolder] = message.useMessage();
 
   const [keyword, setKeyword] = useState('');
@@ -105,12 +105,8 @@ const CourseList = () => {
     setStudentModalOpen(true);
     setSelectedStudentIds([]);
     await dispatch(fetchCourseStudents(course.id));
+    await dispatch(fetchCourseCandidateStudents(course.id));
   };
-
-  const candidateStudents = useMemo(() => {
-    const joinedSet = new Set(students.map((item) => item.studentId));
-    return mockStudents.filter((item) => !joinedSet.has(item.id));
-  }, [students]);
 
   const handleAddStudents = async () => {
     if (!selectedCourse || selectedStudentIds.length === 0) {
@@ -127,6 +123,7 @@ const CourseList = () => {
       messageApi.success('已拉取学生加入课程');
       setSelectedStudentIds([]);
       await dispatch(fetchCourseStudents(selectedCourse.id));
+      await dispatch(fetchCourseCandidateStudents(selectedCourse.id));
       await loadCourses();
     } catch (error) {
       const err = error as Error;
@@ -143,6 +140,7 @@ const CourseList = () => {
       await dispatch(removeStudentFromCourse({ courseId: selectedCourse.id, studentId })).unwrap();
       messageApi.success('已移除学生');
       await dispatch(fetchCourseStudents(selectedCourse.id));
+      await dispatch(fetchCourseCandidateStudents(selectedCourse.id));
       await loadCourses();
     } catch (error) {
       const err = error as Error;
@@ -236,7 +234,7 @@ const CourseList = () => {
                       </Button>
                       <Popconfirm
                         title="确认删除课程？"
-                        description="删除后课程与章节内容将从本地演示数据移除。"
+                        description="删除后课程、章节和课件关联将从系统中移除。"
                         okText="删除"
                         cancelText="取消"
                         onConfirm={() => void handleDeleteCourse(course.id)}
@@ -279,7 +277,7 @@ const CourseList = () => {
               value={selectedStudentIds}
               onChange={setSelectedStudentIds}
               options={candidateStudents.map((student) => ({
-                label: `${student.realName} (${student.username})`,
+                label: `${student.realName} (${student.studentNo})`,
                 value: student.id,
               }))}
             />

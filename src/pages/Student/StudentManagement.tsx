@@ -34,7 +34,6 @@ import {
   updateStudentApi,
   deleteStudentApi,
   updateStudentPermissionsApi,
-  syncStudentsApi,
   type StudentProfile as ApiStudentProfile,
   type CreateStudentParams,
 } from '@/services/student';
@@ -276,16 +275,16 @@ const StudentManagement = () => {
       const values = await form.validateFields();
       if (editingProfile) {
         await updateStudentApi(editingProfile.id, values);
-        message.success('学生信息已更新');
+        messageApi.success('学生信息已更新');
       } else {
         await createStudentApi(values as CreateStudentParams);
-        message.success('学生信息已新增');
+        messageApi.success('学生信息已新增');
       }
       closeModal();
       await loadStudentList();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '保存失败');
+      messageApi.error(err.message || '保存失败');
 // >>>>>>> 4e3a27e0d8bd463a0a3c80e3c35b4a9d0aff7482
     }
   };
@@ -298,11 +297,11 @@ const StudentManagement = () => {
   const handleDeleteProfile = async (id: string) => {
     try {
       await deleteStudentApi(id);
-      message.success('学生档案已删除');
+      messageApi.success('学生档案已删除');
       await loadStudentList();
     } catch (error) {
       const err = error as Error;
-      message.error(err.message || '删除失败');
+      messageApi.error(err.message || '删除失败');
     }
 // >>>>>>> 4e3a27e0d8bd463a0a3c80e3c35b4a9d0aff7482
   };

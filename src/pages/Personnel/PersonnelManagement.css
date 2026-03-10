@@ -1,0 +1,73 @@
+.personnel-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.personnel-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.personnel-page-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.personnel-filter-card .ant-card-body {
+  padding-bottom: 8px;
+}
+
+.personnel-filter-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.personnel-detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.personnel-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.personnel-subject-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.personnel-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+
+.personnel-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 960px) {
+  .personnel-filter-row,
+  .personnel-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .personnel-page-header {
+    flex-direction: column;
+  }
+
+  .personnel-detail-hero {
+    align-items: flex-start;
+  }
+}

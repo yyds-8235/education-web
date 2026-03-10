@@ -4,6 +4,7 @@ import type {
   CourseChapter,
   CourseQueryParams,
   CourseResource,
+  CourseSelectableStudent,
   CourseStudent,
   CreateCourseParams,
   PaginatedResponse,
@@ -13,12 +14,24 @@ import type { RootState } from '@/store';
 import { generateId } from '@/utils/generator';
 import { initialCourses, initialCourseStudents } from '@/mock/courses';
 import { mockStudents } from '@/mock/users';
+import {
+  addTeacherCourseStudentsApi,
+  createTeacherCourseApi,
+  deleteTeacherCourseApi,
+  getTeacherCourseCandidateStudentsApi,
+  getTeacherCourseDetailApi,
+  getTeacherCourseListApi,
+  getTeacherCourseStudentsApi,
+  removeTeacherCourseStudentApi,
+  updateTeacherCourseApi,
+} from '@/services/course';
 
 interface CourseState {
   allCourses: Course[];
   courses: Course[];
   currentCourse: Course | null;
   students: CourseStudent[];
+  candidateStudents: CourseSelectableStudent[];
   courseStudentMap: Record<string, CourseStudent[]>;
   loading: boolean;
   total: number;
@@ -31,6 +44,7 @@ const initialState: CourseState = {
   courses: initialCourses,
   currentCourse: null,
   students: [],
+  candidateStudents: [],
   courseStudentMap: initialCourseStudents,
   loading: false,
   total: initialCourses.length,
@@ -160,8 +174,22 @@ export const fetchCourses = createAsyncThunk(
   'course/fetchCourses',
   async (params: CourseQueryParams, { getState }) => {
     const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      const response = await getTeacherCourseListApi({
+        ...params,
+        scope: 'mine',
+      });
+      return {
+        ...response,
+        syncAll: true,
+      };
+    }
+
     const filtered = applyCourseFilters(state.course.allCourses, params, state);
-    return getPaginatedData(filtered, params.page, params.pageSize);
+    return {
+      ...getPaginatedData(filtered, params.page, params.pageSize),
+      syncAll: false,
+    };
   }
 );
 
@@ -169,6 +197,10 @@ export const fetchCourseById = createAsyncThunk(
   'course/fetchCourseById',
   async (id: string, { getState }) => {
     const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      return getTeacherCourseDetailApi(id);
+    }
+
     const course = state.course.allCourses.find((item) => item.id === id);
     if (!course) {
       throw new Error('课程不存在');
@@ -188,28 +220,48 @@ export const createCourse = createAsyncThunk(
       throw new Error('仅教师可以创建课程');
     }
 
-    const courseId = generateId();
-    const now = new Date().toISOString();
+    return createTeacherCourseApi(params);
+  }
+);
 
-    const course: Course = {
-      id: courseId,
-      name: params.name,
-      description: params.description,
-      grade: params.grade,
-      class: params.class,
-      subject: params.subject,
-      teacherId: teacher.id,
-      teacherName: teacher.realName,
-      visibility: params.visibility,
-      coverImage: params.coverImage,
-      chapters: buildChapters(courseId, params.chapters),
-      studentCount: 0,
-      status: params.status ?? 'draft',
-      createdAt: now,
-      updatedAt: now,
-    };
+const buildLocalCourse = (
+  params: CreateCourseParams,
+  teacherId: string,
+  teacherName: string,
+): Course => {
+  const courseId = generateId();
+  const now = new Date().toISOString();
 
-    return course;
+  return {
+    id: courseId,
+    name: params.name,
+    description: params.description,
+    grade: params.grade,
+    class: params.class,
+    subject: params.subject,
+    teacherId,
+    teacherName,
+    visibility: params.visibility,
+    coverImage: params.coverImage,
+    chapters: buildChapters(courseId, params.chapters),
+    studentCount: 0,
+    status: params.status ?? 'draft',
+    createdAt: now,
+    updatedAt: now,
+  };
+};
+
+export const createLocalCourse = createAsyncThunk(
+  'course/createLocalCourse',
+  async (params: CreateCourseParams, { getState }) => {
+    const state = getState() as RootState;
+    const teacher = state.auth.user;
+
+    if (!teacher || teacher.role !== 'teacher') {
+      throw new Error('仅教师可以创建课程');
+    }
+
+    return buildLocalCourse(params, teacher.id, teacher.realName);
   }
 );
 
@@ -217,6 +269,11 @@ export const updateCourse = createAsyncThunk(
   'course/updateCourse',
   async (params: UpdateCourseParams, { getState }) => {
     const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      const { id, ...payload } = params;
+      return updateTeacherCourseApi(id, payload);
+    }
+
     const current = state.course.allCourses.find((course) => course.id === params.id);
     if (!current) {
       throw new Error('课程不存在');
@@ -238,14 +295,49 @@ export const updateCourse = createAsyncThunk(
   }
 );
 
-export const deleteCourse = createAsyncThunk('course/deleteCourse', async (id: string) => id);
+export const deleteCourse = createAsyncThunk(
+  'course/deleteCourse',
+  async (id: string, { getState }) => {
+    const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      await deleteTeacherCourseApi(id);
+    }
+
+    return id;
+  },
+);
 
 export const fetchCourseStudents = createAsyncThunk(
   'course/fetchCourseStudents',
   async (courseId: string, { getState }) => {
     const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      return getTeacherCourseStudentsApi(courseId);
+    }
+
     return state.course.courseStudentMap[courseId] ?? [];
   }
+);
+
+export const fetchCourseCandidateStudents = createAsyncThunk(
+  'course/fetchCourseCandidateStudents',
+  async (courseId: string, { getState }) => {
+    const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      return getTeacherCourseCandidateStudentsApi(courseId);
+    }
+
+    const existing = state.course.courseStudentMap[courseId] ?? [];
+    const joinedSet = new Set(existing.map((item) => item.studentId));
+    return mockStudents
+      .filter((item) => !joinedSet.has(item.id))
+      .map((item, index) => ({
+        id: item.id,
+        username: item.username,
+        realName: item.realName,
+        studentNo: `S2026${String(index + 1).padStart(3, '0')}`,
+      }));
+  },
 );
 
 export const addStudentsToCourse = createAsyncThunk(
@@ -255,6 +347,10 @@ export const addStudentsToCourse = createAsyncThunk(
     { getState }
   ) => {
     const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      return addTeacherCourseStudentsApi(courseId, studentIds);
+    }
+
     const existing = state.course.courseStudentMap[courseId] ?? [];
     const existingIdSet = new Set(existing.map((item) => item.studentId));
 
@@ -284,8 +380,16 @@ export const addStudentsToCourse = createAsyncThunk(
 export const removeStudentFromCourse = createAsyncThunk(
   'course/removeStudentFromCourse',
   async (
-    { courseId, studentId }: { courseId: string; studentId: string }
-  ) => ({ courseId, studentId })
+    { courseId, studentId }: { courseId: string; studentId: string },
+    { getState },
+  ) => {
+    const state = getState() as RootState;
+    if (state.auth.user?.role === 'teacher') {
+      return removeTeacherCourseStudentApi(courseId, studentId);
+    }
+
+    return { courseId, studentId };
+  },
 );
 
 export const studentJoinCourse = createAsyncThunk(
@@ -371,6 +475,9 @@ const courseSlice = createSlice({
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.loading = false;
         state.courses = action.payload.list;
+        if (action.payload.syncAll) {
+          state.allCourses = action.payload.list;
+        }
         state.total = action.payload.total;
         state.page = action.payload.page;
         state.pageSize = action.payload.pageSize;
@@ -384,6 +491,12 @@ const courseSlice = createSlice({
       .addCase(fetchCourseById.fulfilled, (state, action) => {
         state.loading = false;
         state.currentCourse = action.payload;
+        const index = state.allCourses.findIndex((item) => item.id === action.payload.id);
+        if (index === -1) {
+          state.allCourses.unshift(action.payload);
+        } else {
+          state.allCourses[index] = action.payload;
+        }
       })
       .addCase(fetchCourseById.rejected, (state) => {
         state.loading = false;
@@ -422,10 +535,19 @@ const courseSlice = createSlice({
       })
       .addCase(fetchCourseStudents.fulfilled, (state, action) => {
         state.students = action.payload;
+        if (state.currentCourse) {
+          state.courseStudentMap[state.currentCourse.id] = action.payload;
+          syncStudentCount(state, state.currentCourse.id);
+        }
+      })
+      .addCase(fetchCourseCandidateStudents.fulfilled, (state, action) => {
+        state.candidateStudents = action.payload;
       })
       .addCase(addStudentsToCourse.fulfilled, (state, action) => {
         const current = state.courseStudentMap[action.payload.courseId] ?? [];
         state.courseStudentMap[action.payload.courseId] = [...current, ...action.payload.students];
+        const joinedIds = new Set(action.payload.students.map((item) => item.studentId));
+        state.candidateStudents = state.candidateStudents.filter((item) => !joinedIds.has(item.id));
 
         if (state.currentCourse?.id === action.payload.courseId) {
           state.students = state.courseStudentMap[action.payload.courseId];

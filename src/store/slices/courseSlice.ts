@@ -12,16 +12,20 @@ import type {
 } from '@/types';
 import type { RootState } from '@/store';
 import { generateId } from '@/utils/generator';
+import { getJoinedCourseIds, isStudentJoinedCourse } from '@/utils/course';
 import { initialCourses, initialCourseStudents } from '@/mock/courses';
 import { mockStudents } from '@/mock/users';
 import {
   addTeacherCourseStudentsApi,
   createTeacherCourseApi,
   deleteTeacherCourseApi,
+  getStudentCourseDetailApi,
+  getStudentCourseListApi,
   getTeacherCourseCandidateStudentsApi,
   getTeacherCourseDetailApi,
   getTeacherCourseListApi,
   getTeacherCourseStudentsApi,
+  joinStudentCourseApi,
   removeTeacherCourseStudentApi,
   updateTeacherCourseApi,
 } from '@/services/course';
@@ -67,11 +71,7 @@ const applyCourseFilters = (
   }
 
   if (user?.role === 'student') {
-    const joinedIds = new Set(
-      Object.entries(state.course.courseStudentMap)
-        .filter(([, students]) => students.some((student) => student.studentId === user.id))
-        .map(([courseId]) => courseId)
-    );
+    const joinedIds = getJoinedCourseIds(state.course.allCourses, state.course.courseStudentMap, user.id);
 
     const scope = params.scope ?? 'joined';
     if (scope === 'joined') {
@@ -132,6 +132,8 @@ const buildChapters = (
       name: resource.name,
       type: resource.type,
       url: resource.url,
+      bucketName: resource.bucketName,
+      objectKey: resource.objectKey,
       size: resource.size,
       duration: resource.type === 'video' ? Math.max(60, Math.floor(resource.size / 1024 / 6)) : undefined,
       order: resourceIndex + 1,
@@ -185,6 +187,33 @@ export const fetchCourses = createAsyncThunk(
       };
     }
 
+    if (state.auth.user?.role === 'student') {
+      const response = await getStudentCourseListApi(params);
+      const hasFilters = Boolean(
+        params.keyword || params.grade || params.class || params.subject || params.status,
+      );
+
+      if (hasFilters) {
+        return {
+          ...response,
+          syncAll: false,
+        };
+      }
+
+      const allResponse = await getStudentCourseListApi({
+        ...params,
+        scope: 'all',
+        page: 1,
+        pageSize: 1000,
+      });
+
+      return {
+        ...response,
+        allList: allResponse.list,
+        syncAll: false,
+      };
+    }
+
     const filtered = applyCourseFilters(state.course.allCourses, params, state);
     return {
       ...getPaginatedData(filtered, params.page, params.pageSize),
@@ -199,6 +228,10 @@ export const fetchCourseById = createAsyncThunk(
     const state = getState() as RootState;
     if (state.auth.user?.role === 'teacher') {
       return getTeacherCourseDetailApi(id);
+    }
+
+    if (state.auth.user?.role === 'student') {
+      return getStudentCourseDetailApi(id);
     }
 
     const course = state.course.allCourses.find((item) => item.id === id);
@@ -315,6 +348,29 @@ export const fetchCourseStudents = createAsyncThunk(
       return getTeacherCourseStudentsApi(courseId);
     }
 
+    const user = state.auth.user;
+    if (user?.role === 'student') {
+      const existing = state.course.courseStudentMap[courseId];
+      if (existing) {
+        return existing;
+      }
+
+      const course = state.course.allCourses.find((item) => item.id === courseId);
+      if (course?.joined) {
+        return [
+          {
+            id: `${courseId}-${user.id}`,
+            courseId,
+            studentId: user.id,
+            studentName: user.realName,
+            studentNo: '',
+            joinedAt: course.updatedAt,
+            progress: 0,
+          },
+        ];
+      }
+    }
+
     return state.course.courseStudentMap[courseId] ?? [];
   }
 );
@@ -411,10 +467,15 @@ export const studentJoinCourse = createAsyncThunk(
       throw new Error('该课程非公开课程，请等待教师拉取');
     }
 
-    const existing = state.course.courseStudentMap[courseId] ?? [];
-    if (existing.some((student) => student.studentId === user.id)) {
+    if (isStudentJoinedCourse(courseId, state.course.allCourses, state.course.courseStudentMap, user.id)) {
       throw new Error('你已加入该课程');
     }
+
+    if (state.auth.user?.role === 'student') {
+      return joinStudentCourseApi(courseId);
+    }
+
+    const existing = state.course.courseStudentMap[courseId] ?? [];
 
     const record: CourseStudent = {
       id: `${courseId}-${user.id}`,
@@ -475,6 +536,9 @@ const courseSlice = createSlice({
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.loading = false;
         state.courses = action.payload.list;
+        if ('allList' in action.payload && action.payload.allList) {
+          state.allCourses = action.payload.allList;
+        }
         if (action.payload.syncAll) {
           state.allCourses = action.payload.list;
         }
@@ -570,6 +634,18 @@ const courseSlice = createSlice({
       .addCase(studentJoinCourse.fulfilled, (state, action) => {
         const current = state.courseStudentMap[action.payload.courseId] ?? [];
         state.courseStudentMap[action.payload.courseId] = [...current, action.payload.student];
+        state.courses = state.courses.map((course) =>
+          course.id === action.payload.courseId ? { ...course, joined: true } : course
+        );
+        state.allCourses = state.allCourses.map((course) =>
+          course.id === action.payload.courseId ? { ...course, joined: true } : course
+        );
+        if (state.currentCourse?.id === action.payload.courseId) {
+          state.currentCourse = {
+            ...state.currentCourse,
+            joined: true,
+          };
+        }
         syncStudentCount(state, action.payload.courseId);
       });
   },

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -6,86 +7,69 @@ import {
   InputNumber,
   Modal,
   Space,
+  Spin,
   Table,
-  Tag,
   Typography,
   message,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { batchGradeObjective, fetchSubmissions, gradeSubmission } from '@/store/slices/testSlice';
-import type { Test, TestSubmission } from '@/types';
-import { useNavigate, useParams } from 'react-router-dom';
+import {
+  batchGradeObjective,
+  fetchSubmissions,
+  fetchTestById,
+  gradeSubmission,
+} from '@/store/slices/testSlice';
+import type { TestQuestion, TestSubmission } from '@/types';
 
 const { Title, Text } = Typography;
 
 const TestGrading = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const { testId } = useParams<{ testId: string }>();
-  const { tests, submissions } = useAppSelector((state) => state.test);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { currentTest, submissions, loading } = useAppSelector((state) => state.test);
   const [messageApi, contextHolder] = message.useMessage();
-
-  const [gradingTest, setGradingTest] = useState<Test | null>(null);
   const [gradingSubmission, setGradingSubmission] = useState<TestSubmission | null>(null);
-  const [gradeModalOpen, setGradeModalOpen] = useState(false);
-  const [gradeDraft, setGradeDraft] = useState<Record<string, { score: number; feedback?: string }>>({});
+  const [gradeDraft, setGradeDraft] = useState<Record<string, { score: number }>>({});
 
   useEffect(() => {
-    if (testId) {
-      const test = tests.find((t) => t.id === testId);
-      if (test) {
-        setGradingTest(test);
-        void dispatch(fetchSubmissions(test.id));
-      }
-    }
-  }, [dispatch, testId, tests]);
-
-  const handleBack = () => {
-    navigate('/tests');
-  };
-
-  const openGradeModal = (submission: TestSubmission) => {
-    if (!gradingTest) {
+    if (!testId) {
       return;
     }
 
-    const draft: Record<string, { score: number; feedback?: string }> = {};
-    submission.answers.forEach((answer) => {
-      draft[answer.questionId] = {
-        score: answer.score ?? 0,
-        feedback: answer.feedback,
-      };
-    });
+    void dispatch(fetchTestById(testId));
+    void dispatch(fetchSubmissions(testId));
+  }, [dispatch, testId]);
 
+  const handleOpenGrading = (submission: TestSubmission) => {
     setGradingSubmission(submission);
+    const draft: Record<string, { score: number }> = {};
+    submission.answers.forEach((answer) => {
+      draft[answer.questionId] = { score: answer.score ?? 0 };
+    });
     setGradeDraft(draft);
-    setGradeModalOpen(true);
   };
 
-  const handleGradeSubmit = async () => {
+  const handleSubmitGrade = async () => {
     if (!gradingSubmission) {
       return;
     }
-
-    const answers = Object.entries(gradeDraft).map(([questionId, grade]) => ({
-      questionId,
-      score: grade.score,
-      feedback: grade.feedback,
-    }));
 
     try {
       await dispatch(
         gradeSubmission({
           submissionId: gradingSubmission.id,
-          answers,
-        })
+          answers: Object.entries(gradeDraft).map(([questionId, value]) => ({
+            questionId,
+            score: value.score,
+          })),
+        }),
       ).unwrap();
       messageApi.success('批改完成');
-      setGradeModalOpen(false);
-      if (gradingTest) {
-        await dispatch(fetchSubmissions(gradingTest.id));
+      setGradingSubmission(null);
+      if (testId) {
+        await dispatch(fetchSubmissions(testId)).unwrap();
       }
     } catch (error) {
       const err = error as Error;
@@ -94,13 +78,13 @@ const TestGrading = () => {
   };
 
   const handleBatchGrade = async () => {
-    if (!gradingTest) {
+    if (!testId) {
       return;
     }
 
     try {
-      await dispatch(batchGradeObjective({ testId: gradingTest.id })).unwrap();
-      await dispatch(fetchSubmissions(gradingTest.id));
+      await dispatch(batchGradeObjective({ testId })).unwrap();
+      await dispatch(fetchSubmissions(testId)).unwrap();
       messageApi.success('客观题批量批改完成');
     } catch (error) {
       const err = error as Error;
@@ -108,87 +92,85 @@ const TestGrading = () => {
     }
   };
 
-  const gradingColumns: ColumnsType<TestSubmission> = [
-    {
-      title: '学生',
-      dataIndex: 'studentName',
-      key: 'studentName',
-    },
-    {
-      title: '学号',
-      dataIndex: 'studentNo',
-      key: 'studentNo',
-    },
+  const columns = [
+    { title: '学生姓名', dataIndex: 'studentName', key: 'studentName' },
+    { title: '学号', dataIndex: 'studentNo', key: 'studentNo' },
     {
       title: '状态',
       dataIndex: 'status',
-      render: (value) => <Tag color={value === 'graded' ? 'green' : 'default'}>{value === 'graded' ? '已批改' : '待批改'}</Tag>,
+      key: 'status',
+      render: (value: TestSubmission['status']) => (value === 'graded' ? '已批改' : '待批改'),
     },
     {
       title: '得分',
       dataIndex: 'totalScore',
-      render: (value) => value ?? '-',
+      key: 'totalScore',
+      render: (value: number | undefined) => value ?? '-',
     },
     {
       title: '操作',
-      render: (_, submission) => (
-        <Button type="link" onClick={() => openGradeModal(submission)}>
+      key: 'action',
+      render: (_: unknown, record: TestSubmission) => (
+        <Button type="link" onClick={() => handleOpenGrading(record)}>
           批改
         </Button>
       ),
     },
   ];
 
+  const questionMap = useMemo(() => {
+    const map = new Map<string, TestQuestion>();
+    currentTest?.questions.forEach((question) => map.set(question.id, question));
+    return map;
+  }, [currentTest]);
+
+  if (!testId) {
+    return <Empty description="缺少测试标识" />;
+  }
+
   return (
     <div className="test-grading-page">
       {contextHolder}
       <div className="test-header">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/tests')}>
             返回测试列表
           </Button>
-          <Title level={3}>批改面板</Title>
+          <Title level={3} style={{ margin: 0 }}>
+            测试批改
+          </Title>
         </Space>
+        <Button onClick={() => void handleBatchGrade()}>客观题批量批改</Button>
       </div>
 
-      {!gradingTest ? (
-        <Empty description="测试不存在" />
+      {!currentTest ? (
+        loading ? <Spin spinning tip="加载测试中..." /> : <Empty description="测试不存在" />
       ) : (
-        <Card
-          title={`${gradingTest.title} - 批改面板`}
-          extra={
-            <Button onClick={() => void handleBatchGrade()} type="primary">
-              批量批改客观题
-            </Button>
-          }
-        >
-          <Table
-            rowKey="id"
-            dataSource={submissions}
-            columns={gradingColumns}
-            pagination={false}
-            locale={{ emptyText: '暂无学生提交' }}
-          />
+        <Card title={currentTest.title} extra={<Text>{currentTest.courseName}</Text>}>
+          <Table rowKey="id" columns={columns} dataSource={submissions} pagination={false} />
         </Card>
       )}
 
       <Modal
-        title={gradingSubmission ? `批改：${gradingSubmission.studentName}` : '批改'}
-        open={gradeModalOpen}
-        onCancel={() => setGradeModalOpen(false)}
-        onOk={() => void handleGradeSubmit()}
-        okText="提交批改"
-        width={900}
+        title={gradingSubmission ? `批改 - ${gradingSubmission.studentName}` : '批改测试'}
+        open={Boolean(gradingSubmission)}
+        onCancel={() => setGradingSubmission(null)}
+        onOk={() => void handleSubmitGrade()}
+        width={840}
       >
-        {!gradingSubmission || !gradingTest ? null : (
+        {gradingSubmission && currentTest && (
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
-            {gradingTest.questions.map((question) => {
-              const answer = gradingSubmission.answers.find((item) => item.questionId === question.id);
+            {gradingSubmission.answers.map((answer) => {
+              const question = questionMap.get(answer.questionId);
+              if (!question) {
+                return null;
+              }
+
               return (
-                <Card key={question.id} size="small" title={`${question.content}（满分 ${question.score}）`}>
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text>学生答案：{answer?.answer || '未作答'}</Text>
-                    <Text type="secondary">参考答案：{question.answer || '无'}</Text>
+                <Card key={answer.questionId} size="small" title={`${question.content}（满分 ${question.score}）`}>
+                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <Text>学生答案：{answer.answer || '未作答'}</Text>
+                    <Text type="secondary">参考答案：{question.answer || '暂无'}</Text>
                     <Space>
                       <InputNumber
                         min={0}
@@ -197,10 +179,7 @@ const TestGrading = () => {
                         onChange={(value) =>
                           setGradeDraft((prev) => ({
                             ...prev,
-                            [question.id]: {
-                              ...prev[question.id],
-                              score: value ?? 0,
-                            },
+                            [question.id]: { score: value ?? 0 },
                           }))
                         }
                       />

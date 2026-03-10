@@ -31,6 +31,7 @@ import {
   startClassroom,
   studentCheckIn,
 } from '@/store/slices/classroomSlice';
+import { isStudentJoinedCourse } from '@/utils/course';
 import './Classroom.css';
 
 const { TextArea } = Input;
@@ -86,11 +87,9 @@ const Classroom = () => {
         return false;
       }
 
-      return (courseStudentMap[classroom.courseId] ?? []).some(
-        (student) => student.studentId === user.id
-      );
+      return isStudentJoinedCourse(classroom.courseId, allCourses, courseStudentMap, user.id);
     });
-  }, [classrooms, courseStudentMap, user]);
+  }, [allCourses, classrooms, courseStudentMap, user]);
 
   useEffect(() => {
     if (currentClassroom) {

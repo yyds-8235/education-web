@@ -3,6 +3,7 @@ import { BookOutlined, CheckCircleOutlined, ExperimentOutlined, TeamOutlined } f
 import { useMemo } from 'react';
 import { mockStudents } from '@/mock/users';
 import { useAppSelector } from '@/store/hooks';
+import { getJoinedCourseIds } from '@/utils/course';
 import './Dashboard.css';
 
 const { Title, Paragraph } = Typography;
@@ -46,9 +47,8 @@ const Dashboard = () => {
       };
     }
 
-    const joinedCourses = allCourses.filter((course) =>
-      (courseStudentMap[course.id] ?? []).some((student) => student.studentId === user.id)
-    );
+    const joinedCourseIds = getJoinedCourseIds(allCourses, courseStudentMap, user.id);
+    const joinedCourses = allCourses.filter((course) => joinedCourseIds.has(course.id));
 
     return {
       courseCount: joinedCourses.length,

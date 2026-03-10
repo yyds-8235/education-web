@@ -33,8 +33,20 @@ export const getTeacherCourseListApi = async (
   return response.data.data;
 };
 
+export const getStudentCourseListApi = async (
+  params: CourseQueryParams,
+): Promise<PaginatedResponse<Course>> => {
+  const response = await request.get('/student/courses', { params });
+  return response.data.data;
+};
+
 export const getTeacherCourseDetailApi = async (courseId: string): Promise<Course> => {
   const response = await request.get(`/teacher/courses/${courseId}`);
+  return response.data.data;
+};
+
+export const getStudentCourseDetailApi = async (courseId: string): Promise<Course> => {
+  const response = await request.get(`/student/courses/${courseId}`);
   return response.data.data;
 };
 
@@ -81,6 +93,13 @@ export const removeTeacherCourseStudentApi = async (
   studentId: string,
 ): Promise<{ courseId: string; studentId: string }> => {
   const response = await request.delete(`/teacher/courses/${courseId}/students/${studentId}`);
+  return response.data.data;
+};
+
+export const joinStudentCourseApi = async (
+  courseId: string,
+): Promise<{ courseId: string; student: CourseStudent }> => {
+  const response = await request.post(`/student/courses/${courseId}/join`);
   return response.data.data;
 };
 

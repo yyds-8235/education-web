@@ -14,6 +14,7 @@ export interface Course {
     coverImage?: string;
     chapters: CourseChapter[];
     studentCount: number;
+    joined?: boolean;
     status: CourseStatus;
     createdAt: string;
     updatedAt: string;

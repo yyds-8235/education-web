@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchCourseById, fetchCourseStudents, studentJoinCourse } from '@/store/slices/courseSlice';
 import type { CourseResource } from '@/types';
 import { getCourseResourceDownloadUrlApi, getCourseResourcePreviewUrlApi } from '@/services/course';
+import { isStudentJoinedCourse } from '@/utils/course';
 import './CourseDetail.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -64,8 +65,8 @@ const CourseDetail = () => {
       return false;
     }
 
-    return (courseStudentMap[course.id] ?? []).some((student) => student.studentId === user.id);
-  }, [course, courseStudentMap, user]);
+    return isStudentJoinedCourse(course.id, allCourses, courseStudentMap, user.id);
+  }, [allCourses, course, courseStudentMap, user]);
 
   const handleJoin = async () => {
     if (!course) {

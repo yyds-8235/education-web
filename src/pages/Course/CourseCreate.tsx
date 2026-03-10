@@ -116,6 +116,8 @@ const CourseCreate = () => {
           type: resource.type,
           size: resource.size,
           url: resource.url,
+          bucketName: resource.bucketName,
+          objectKey: resource.objectKey,
         })),
       }))
     );
@@ -233,7 +235,15 @@ const CourseCreate = () => {
         id: chapter.id,
         title: chapter.title,
         description: chapter.description,
-        resources: chapter.resources,
+        resources: chapter.resources.map((resource) => ({
+          id: resource.id,
+          name: resource.name,
+          type: resource.type,
+          url: resource.url,
+          bucketName: resource.bucketName,
+          objectKey: resource.objectKey,
+          size: resource.size,
+        })),
       })),
     };
 

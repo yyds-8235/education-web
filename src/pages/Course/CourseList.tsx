@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import {
   Button,
   Card,
@@ -11,6 +11,7 @@ import {
   Row,
   Segmented,
   Select,
+  Spin,
   Space,
   Tag,
   Typography,
@@ -54,21 +55,21 @@ const CourseList = () => {
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const showStudentListLoading = user?.role === 'student' && loading;
 
   const loadCourses = async (nextKeyword = keyword, nextScope = scope) => {
     const queryScope = user?.role === 'teacher' ? 'mine' : nextScope;
-    try {      
+
+    try {
       await dispatch(
         fetchCourses({
           page: 1,
           pageSize: 12,
           keyword: nextKeyword,
           scope: queryScope,
-        })
-      );
-      } catch (error) {
-              console.log(error);
-
+        }),
+      ).unwrap();
+    } catch (error) {
       const err = error as Error;
       messageApi.error(err.message || '查询失败');
     }
@@ -76,7 +77,6 @@ const CourseList = () => {
 
   useEffect(() => {
     void loadCourses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, user?.id, scope]);
 
   const handleSearch = () => {
@@ -124,7 +124,7 @@ const CourseList = () => {
         addStudentsToCourse({
           courseId: selectedCourse.id,
           studentIds: selectedStudentIds,
-        })
+        }),
       ).unwrap();
       messageApi.success('已拉取学生加入课程');
       setSelectedStudentIds([]);
@@ -198,71 +198,77 @@ const CourseList = () => {
         </Space>
       </div>
 
-      {courses.length === 0 && !loading ? (
-        <Empty description={user?.role === 'teacher' ? '暂无课程，请先创建课程' : '暂无课程'} />
-      ) : (
-        <Row gutter={[16, 16]}>
-          {courses.map((course) => (
-            <Col key={course.id} xs={24} md={12} xl={8}>
-              <Card
-                className="course-card"
-                title={<span>{course.name}</span>}
-                extra={
-                  <Tag color={course.visibility === 'public' ? 'green' : 'orange'}>
-                    {course.visibility === 'public' ? '公开' : '私有'}
-                  </Tag>
-                }
-              >
-                <Paragraph className="course-card-desc" ellipsis={{ rows: 2 }}>
-                  {course.description || '暂无描述'}
-                </Paragraph>
+      <Spin spinning={showStudentListLoading} tip="加载课程中...">
+        {courses.length === 0 && !loading ? (
+          <Empty description={user?.role === 'teacher' ? '暂无课程，请先创建课程' : '暂无课程'} />
+        ) : (
+          <Row gutter={[16, 16]}>
+            {courses.map((course) => (
+              <Col key={course.id} xs={24} md={12} xl={8}>
+                <Card
+                  className="course-card"
+                  title={<span>{course.name}</span>}
+                  extra={
+                    <Tag color={course.visibility === 'public' ? 'green' : 'orange'}>
+                      {course.visibility === 'public' ? '公开' : '私有'}
+                    </Tag>
+                  }
+                >
+                  <Paragraph className="course-card-desc" ellipsis={{ rows: 2 }}>
+                    {course.description || '暂无描述'}
+                  </Paragraph>
 
-                <Space size={[6, 6]} wrap>
-                  <Tag>{course.subject}</Tag>
-                  <Tag>{course.grade}</Tag>
-                  <Tag>{course.class}</Tag>
-                  <Tag color="blue">{course.chapters.length} 章</Tag>
-                  <Tag color="purple">{course.studentCount} 人</Tag>
-                </Space>
+                  <Space size={[6, 6]} wrap>
+                    <Tag>{course.subject}</Tag>
+                    <Tag>{course.grade}</Tag>
+                    <Tag>{course.class}</Tag>
+                    <Tag color="blue">{course.chapters.length} 章</Tag>
+                    <Tag color="purple">{course.studentCount} 人</Tag>
+                  </Space>
 
-                <div className="course-actions">
-                  <Button icon={<EyeOutlined />} onClick={() => navigate(`/courses/${course.id}`)}>
-                    查看
-                  </Button>
+                  <div className="course-actions">
+                    <Button icon={<EyeOutlined />} onClick={() => navigate(`/courses/${course.id}`)}>
+                      查看
+                    </Button>
 
-                  {user?.role === 'teacher' ? (
-                    <>
-                      <Button icon={<EditOutlined />} onClick={() => navigate(`/courses/${course.id}/edit`)}>
-                        编辑
-                      </Button>
-                      <Button icon={<TeamOutlined />} onClick={() => void openStudentModal(course)}>
-                        学生
-                      </Button>
-                      <Popconfirm
-                        title="确认删除课程？"
-                        description="删除后课程、章节和课件关联将从系统中移除。"
-                        okText="删除"
-                        cancelText="取消"
-                        onConfirm={() => void handleDeleteCourse(course.id)}
-                      >
-                        <Button danger icon={<DeleteOutlined />}>
-                          删除
+                    {user?.role === 'teacher' ? (
+                      <>
+                        <Button icon={<EditOutlined />} onClick={() => navigate(`/courses/${course.id}/edit`)}>
+                          编辑
                         </Button>
-                      </Popconfirm>
-                    </>
-                  ) : (
-                    scope === 'discover' && (
-                      <Button type="primary" icon={<UserAddOutlined />} onClick={() => void handleJoinCourse(course.id)}>
-                        加入课程
-                      </Button>
-                    )
-                  )}
-                </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
+                        <Button icon={<TeamOutlined />} onClick={() => void openStudentModal(course)}>
+                          学生
+                        </Button>
+                        <Popconfirm
+                          title="确认删除课程？"
+                          description="删除后课程、章节和课件关联将从系统中移除。"
+                          okText="删除"
+                          cancelText="取消"
+                          onConfirm={() => void handleDeleteCourse(course.id)}
+                        >
+                          <Button danger icon={<DeleteOutlined />}>
+                            删除
+                          </Button>
+                        </Popconfirm>
+                      </>
+                    ) : (
+                      scope === 'discover' && (
+                        <Button
+                          type="primary"
+                          icon={<UserAddOutlined />}
+                          onClick={() => void handleJoinCourse(course.id)}
+                        >
+                          加入课程
+                        </Button>
+                      )
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </Spin>
 
       <div className="course-footer">共 {total} 门课程</div>
 

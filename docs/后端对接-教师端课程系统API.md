@@ -15,6 +15,8 @@
 7. 教师拉取学生加入课程
 8. 教师移除课程内学生
 9. 教师上传课件文件（后端落 MinIO）
+10. 课程资源预览
+11. 课程资源下载
 
 前端涉及文件：
 
@@ -402,6 +404,61 @@
 
 ---
 
+### 4.11 获取课程资源预览地址
+
+- Method: `GET`
+- Path: `/course-resources/{resourceId}/preview-url`
+- Auth: 是（teacher / 已加入课程的 student）
+
+#### 成功响应（`data`）
+
+```json
+{
+  "resourceId": "resource-1",
+  "fileName": "第一章课件.pdf",
+  "url": "https://minio.example.com/course-assets/...signed-preview-url",
+  "expiresIn": 600
+}
+```
+
+#### 后端处理建议
+
+1. 根据 `resourceId` 找到 `course_resources`
+2. 关联章节与课程，校验当前用户是否有访问权限
+3. 根据 `bucket_name/object_key` 生成 MinIO 预签名预览地址
+4. 对于 PDF / 视频类资源，建议设置可内联预览的响应头
+5. 返回短时效 URL（如 5~10 分钟）
+
+> 如果后端不想返回签名 URL，也可以直接做文件流转发，但前端当前实现更适合“返回预览地址”模式。
+
+---
+
+### 4.12 获取课程资源下载地址
+
+- Method: `GET`
+- Path: `/course-resources/{resourceId}/download-url`
+- Auth: 是（teacher / 已加入课程的 student）
+
+#### 成功响应（`data`）
+
+```json
+{
+  "resourceId": "resource-1",
+  "fileName": "第一章课件.pdf",
+  "url": "https://minio.example.com/course-assets/...signed-download-url",
+  "expiresIn": 600
+}
+```
+
+#### 后端处理建议
+
+1. 校验当前用户对该资源所属课程有访问权限
+2. 基于 `bucket_name/object_key` 生成下载用预签名 URL
+3. 下载时建议设置 `Content-Disposition: attachment; filename=...`
+4. 若资源不存在或对象已被删除，应返回 `404`
+
+---
+
 ## 5. 数据库设计（仅新增课程域表）
 
 说明：
@@ -525,6 +582,24 @@ courses/teacher-1/2026/03/3e4e2f8b-first-chapter.pdf
 2. 调用 MinIO SDK 删除对象
 3. 删除数据库记录
 
+### 6.5 预览 / 下载建议
+
+建议 MinIO Bucket 维持私有读权限，不直接暴露长期公开地址。
+
+推荐做法：
+
+1. 前端点击“预览” -> 调用 `/course-resources/{resourceId}/preview-url`
+2. 后端校验课程访问权限后返回短时效签名 URL
+3. 前端新开标签页打开该 URL
+4. 前端点击“下载” -> 调用 `/course-resources/{resourceId}/download-url`
+5. 后端返回下载签名 URL，并设置下载响应头
+
+这样可以避免：
+
+1. 资源长期暴露
+2. 任意人拿到静态 URL 后可持续访问
+3. 前端直接拼接 MinIO 路径带来的安全问题
+
 ---
 
 ## 7. 数据库字段映射
@@ -618,6 +693,8 @@ courses/teacher-1/2026/03/3e4e2f8b-first-chapter.pdf
 8. `addStudentsToCourse`（教师） -> `POST /teacher/courses/{id}/students`
 9. `removeStudentFromCourse`（教师） -> `DELETE /teacher/courses/{id}/students/{studentId}`
 10. `uploadTeacherCourseResourceApi` -> `POST /teacher/course-resources/upload`
+11. `getCourseResourcePreviewUrlApi` -> `GET /course-resources/{resourceId}/preview-url`
+12. `getCourseResourceDownloadUrlApi` -> `GET /course-resources/{resourceId}/download-url`
 
 ### 当前仍保留前端演示逻辑的部分
 

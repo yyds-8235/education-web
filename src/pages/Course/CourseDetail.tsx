@@ -11,11 +11,12 @@ import {
   Typography,
   message,
 } from 'antd';
-import { EditOutlined, FileOutlined, UserAddOutlined } from '@ant-design/icons';
+import { DownloadOutlined, EditOutlined, EyeOutlined, FileOutlined, UserAddOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchCourseById, fetchCourseStudents, studentJoinCourse } from '@/store/slices/courseSlice';
 import type { CourseResource } from '@/types';
+import { getCourseResourceDownloadUrlApi, getCourseResourcePreviewUrlApi } from '@/services/course';
 import './CourseDetail.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -26,6 +27,14 @@ const resourceTypeLabel: Record<CourseResource['type'], string> = {
   word: 'Word 文档',
   pdf: 'PDF 文档',
   other: '其他文件',
+};
+
+const resourcePreviewLabel: Record<CourseResource['type'], string> = {
+  video: '在线播放',
+  ppt: '在线预览',
+  word: '在线预览',
+  pdf: '在线预览',
+  other: '预览文件',
 };
 
 const CourseDetail = () => {
@@ -70,6 +79,37 @@ const CourseDetail = () => {
     } catch (error) {
       const err = error as Error;
       messageApi.error(err.message || '加入失败');
+    }
+  };
+
+  const openUrlInNewTab = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handlePreviewResource = async (resource: CourseResource) => {
+    try {
+      const response = await getCourseResourcePreviewUrlApi(resource.id);
+      openUrlInNewTab(response.url);
+    } catch (error) {
+      const err = error as Error;
+      messageApi.error(err.message || '获取预览地址失败');
+    }
+  };
+
+  const handleDownloadResource = async (resource: CourseResource) => {
+    try {
+      const response = await getCourseResourceDownloadUrlApi(resource.id);
+      const anchor = document.createElement('a');
+      anchor.href = response.url;
+      anchor.download = response.fileName || resource.name;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    } catch (error) {
+      const err = error as Error;
+      messageApi.error(err.message || '获取下载地址失败');
     }
   };
 
@@ -146,8 +186,28 @@ const CourseDetail = () => {
                       bordered
                       dataSource={chapter.resources}
                       renderItem={(resource) => (
-                        <List.Item>
-                          <Space>
+                        <List.Item
+                          className="course-resource-item"
+                          actions={[
+                            <Button
+                              key="preview"
+                              type="link"
+                              icon={<EyeOutlined />}
+                              onClick={() => void handlePreviewResource(resource)}
+                            >
+                              {resourcePreviewLabel[resource.type]}
+                            </Button>,
+                            <Button
+                              key="download"
+                              type="link"
+                              icon={<DownloadOutlined />}
+                              onClick={() => void handleDownloadResource(resource)}
+                            >
+                              下载
+                            </Button>,
+                          ]}
+                        >
+                          <Space className="course-resource-meta">
                             <FileOutlined />
                             <span>{resource.name}</span>
                             <Tag>{resourceTypeLabel[resource.type]}</Tag>

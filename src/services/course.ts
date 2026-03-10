@@ -19,6 +19,13 @@ export interface CourseUploadResourceResponse {
   size: number;
 }
 
+export interface CourseResourceAccessResponse {
+  resourceId: string;
+  fileName: string;
+  url: string;
+  expiresIn?: number;
+}
+
 export const getTeacherCourseListApi = async (
   params: CourseQueryParams,
 ): Promise<PaginatedResponse<Course>> => {
@@ -89,5 +96,19 @@ export const uploadTeacherCourseResourceApi = async (
     },
   });
 
+  return response.data.data;
+};
+
+export const getCourseResourcePreviewUrlApi = async (
+  resourceId: string,
+): Promise<CourseResourceAccessResponse> => {
+  const response = await request.get(`/course-resources/${resourceId}/preview-url`);
+  return response.data.data;
+};
+
+export const getCourseResourceDownloadUrlApi = async (
+  resourceId: string,
+): Promise<CourseResourceAccessResponse> => {
+  const response = await request.get(`/course-resources/${resourceId}/download-url`);
   return response.data.data;
 };

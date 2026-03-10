@@ -11,6 +11,17 @@
   gap: 12px;
 }
 
+.course-resource-item {
+  width: 100%;
+}
+
+.course-resource-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 768px) {
   .course-detail-header {
     flex-direction: column;

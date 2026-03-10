@@ -67,7 +67,7 @@ const topMenus: TopMenuItem[] = [
     key: '/students',
     label: '学生管理',
     icon: <UserOutlined />,
-    roles: ['teacher', 'admin'],
+    roles: ['admin'],
   },
   {
     key: '/schedule',

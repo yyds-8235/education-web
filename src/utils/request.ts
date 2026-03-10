@@ -29,10 +29,13 @@ request.interceptors.response.use(
 
     // 如果返回的状态码不是200或0，则显示错误信息
     if (res.code !== 200 && res.code !== 0) {
+
       // 401: Token过期或未登录
       if (res.code === 401) {
+                    console.log(res);
+
         // 只有在非登录接口时才跳转
-        if (!response.config?.url?.includes('/auth/login')) {
+        if (!response.config?.url?.includes('/login')) {
           localStorage.removeItem('token');
           localStorage.removeItem('userInfo');
           window.location.href = `${window.location.origin}${window.location.pathname}#/login`;

@@ -74,8 +74,10 @@ const CourseCreate = () => {
   const [form] = Form.useForm();
   const [chapters, setChapters] = useState<DraftChapter[]>([]);
   const [saving, setSaving] = useState(false);
+  const [uploadingCounts, setUploadingCounts] = useState<Record<string, number>>({});
   const { allCourses, currentCourse } = useAppSelector((state) => state.course);
   const [messageApi, contextHolder] = message.useMessage();
+  const hasUploadingFiles = Object.values(uploadingCounts).some((count) => count > 0);
 
   const editingCourse = useMemo(
     () => currentCourse?.id === id ? currentCourse : allCourses.find((course) => course.id === id),
@@ -156,11 +158,28 @@ const CourseCreate = () => {
     );
   };
 
+  const updateUploadingCount = (chapterId: string, delta: 1 | -1) => {
+    setUploadingCounts((prev) => {
+      const nextCount = Math.max((prev[chapterId] ?? 0) + delta, 0);
+      if (nextCount === 0) {
+        const { [chapterId]: _removed, ...rest } = prev;
+        return rest;
+      }
+
+      return {
+        ...prev,
+        [chapterId]: nextCount,
+      };
+    });
+  };
+
   const buildUploadHandler = (chapterId: string): UploadProps['customRequest'] => async ({
     file,
     onError,
     onSuccess,
   }) => {
+    updateUploadingCount(chapterId, 1);
+
     try {
       const response = await uploadTeacherCourseResourceApi(file as File);
       addUploadedResource(chapterId, {
@@ -178,6 +197,8 @@ const CourseCreate = () => {
       const err = error as Error;
       messageApi.error(err.message || '文件上传失败');
       onError?.(err);
+    } finally {
+      updateUploadingCount(chapterId, -1);
     }
   };
 
@@ -195,6 +216,11 @@ const CourseCreate = () => {
   };
 
   const handleSubmit = async (values: Omit<CreateCourseParams, 'chapters'>) => {
+    if (hasUploadingFiles) {
+      messageApi.warning('请等待文件导入完成后再保存');
+      return;
+    }
+
     const emptyChapter = chapters.find((chapter) => !chapter.title.trim());
     if (emptyChapter) {
       messageApi.warning('请填写完整章节名称');
@@ -215,10 +241,16 @@ const CourseCreate = () => {
     try {
       if (isEdit && id) {
         await dispatch(updateCourse({ id, ...payload })).unwrap();
-        messageApi.success('课程已更新');
+        await messageApi.success({
+          content: '课程已更新',
+          duration: 2,
+        });
       } else {
         await dispatch(createCourse(payload)).unwrap();
-        messageApi.success('课程已创建');
+        await messageApi.success({
+          content: '课程已创建',
+          duration: 2,
+        });
       }
 
       navigate('/courses');
@@ -310,7 +342,10 @@ const CourseCreate = () => {
               </Card>
             ) : (
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                {chapters.map((chapter, index) => (
+                {chapters.map((chapter, index) => {
+                  const isUploading = Boolean(uploadingCounts[chapter.id]);
+
+                  return (
                   <Card
                     key={chapter.id}
                     size="small"
@@ -344,7 +379,9 @@ const CourseCreate = () => {
                         showUploadList={false}
                         accept=".mp4,.mov,.webm,.ppt,.pptx,.doc,.docx,.pdf"
                       >
-                        <Button icon={<UploadOutlined />}>导入教学文件</Button>
+                        <Button icon={<UploadOutlined />} loading={isUploading}>
+                          {isUploading ? '导入中...' : '导入教学文件'}
+                        </Button>
                       </Upload>
 
                       <div className="resource-list">
@@ -364,14 +401,20 @@ const CourseCreate = () => {
                       </div>
                     </Space>
                   </Card>
-                ))}
+                  );
+                })}
               </Space>
             )}
           </div>
 
           <div className="course-form-actions">
             <Button onClick={() => navigate('/courses')}>取消</Button>
-            <Button htmlType="submit" type="primary" loading={saving}>
+            <Button
+              htmlType="submit"
+              type="primary"
+              loading={saving}
+              disabled={hasUploadingFiles}
+            >
               {isEdit ? '保存修改' : '创建课程'}
             </Button>
           </div>

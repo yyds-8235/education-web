@@ -57,15 +57,21 @@ const CourseList = () => {
 
   const loadCourses = async (nextKeyword = keyword, nextScope = scope) => {
     const queryScope = user?.role === 'teacher' ? 'mine' : nextScope;
+    try {      
+      await dispatch(
+        fetchCourses({
+          page: 1,
+          pageSize: 12,
+          keyword: nextKeyword,
+          scope: queryScope,
+        })
+      );
+      } catch (error) {
+              console.log(error);
 
-    await dispatch(
-      fetchCourses({
-        page: 1,
-        pageSize: 12,
-        keyword: nextKeyword,
-        scope: queryScope,
-      })
-    );
+      const err = error as Error;
+      messageApi.error(err.message || '查询失败');
+    }
   };
 
   useEffect(() => {

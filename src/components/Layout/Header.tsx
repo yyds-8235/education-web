@@ -40,22 +40,10 @@ const topMenus: TopMenuItem[] = [
     roles: ['teacher', 'student', 'admin'],
   },
   {
-    key: '/personnel',
-    label: '人员管理',
-    icon: <TeamOutlined />,
+    key: '/personnel/teachers',
+    label: '教师管理',
+    icon: <IdcardOutlined />,
     roles: ['admin'],
-    children: [
-      {
-        key: '/personnel/students',
-        label: '学生',
-        icon: <UserOutlined />,
-      },
-      {
-        key: '/personnel/teachers',
-        label: '教师',
-        icon: <IdcardOutlined />,
-      },
-    ],
   },
   {
     key: '/courses',

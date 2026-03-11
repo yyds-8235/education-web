@@ -45,6 +45,14 @@
   padding-right: 4px;
 }
 
+.student-clickable-row {
+  cursor: pointer;
+}
+
+.student-clickable-row:hover > td {
+  background: #f0f7ff !important;
+}
+
 @media (max-width: 1024px) {
   .student-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

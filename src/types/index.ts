@@ -5,3 +5,4 @@ export * from './test';
 export * from './schedule';
 export * from './attendance';
 export * from './common';
+export * from './studentAnalytics';

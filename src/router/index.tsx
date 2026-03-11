@@ -18,10 +18,12 @@ import {
   Attendance,
   Analytics,
   StudentManagement,
+  StudentLearningProfilePage,
+  StudentDetailPage,
+  StudentFormPage,
   Dashboard,
   StudentListPage,
   StudentCreatePage,
-  StudentDetailPage,
   StudentEditPage,
   TeacherListPage,
   TeacherCreatePage,
@@ -111,26 +113,6 @@ export const router = createHashRouter([
         element: <Analytics />,
       },
       {
-        path: 'personnel',
-        element: <Navigate to="/personnel/students" replace />,
-      },
-      {
-        path: 'personnel/students',
-        element: <StudentListPage />,
-      },
-      {
-        path: 'personnel/students/new',
-        element: <StudentCreatePage />,
-      },
-      {
-        path: 'personnel/students/:id',
-        element: <StudentDetailPage />,
-      },
-      {
-        path: 'personnel/students/:id/edit',
-        element: <StudentEditPage />,
-      },
-      {
         path: 'personnel/teachers',
         element: <TeacherListPage />,
       },
@@ -149,6 +131,22 @@ export const router = createHashRouter([
       {
         path: 'students',
         element: <StudentManagement />,
+      },
+      {
+        path: 'students/new',
+        element: <StudentFormPage />,
+      },
+      {
+        path: 'students/:id/detail',
+        element: <StudentDetailPage />,
+      },
+      {
+        path: 'students/:id/edit',
+        element: <StudentFormPage />,
+      },
+      {
+        path: 'students/:id/learning',
+        element: <StudentLearningProfilePage />,
       },
     ],
   },

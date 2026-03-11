@@ -91,6 +91,17 @@ const Classroom = () => {
     });
   }, [allCourses, classrooms, courseStudentMap, user]);
 
+  // 检查当前学生是否已签到
+  const hasCheckedIn = useMemo(() => {
+    if (!user || !activeCheckInSession) {
+      return false;
+    }
+
+    return activeCheckInSession.records.some(
+      (record) => record.studentId === user.id && record.status === 'checked'
+    );
+  }, [activeCheckInSession, user]);
+
   useEffect(() => {
     if (currentClassroom) {
       setSelectedCourseId(currentClassroom.courseId);
@@ -249,12 +260,16 @@ const Classroom = () => {
     }
 
     try {
-      // 模拟学生列表（实际项目中应该从API获取）
-      const studentList = localCheckInData.map(item => item.studentName);
-      if (studentList.length === 0) {
-        messageApi.warning('暂无学生数据');
+      // 从课程学生列表获取学生信息
+      const courseStudents = courseStudentMap[currentClassroom.courseId] || [];
+
+      if (courseStudents.length === 0) {
+        messageApi.warning('该课程暂无学生');
         return;
       }
+
+      // 获取学生姓名列表
+      const studentList = courseStudents.map(cs => cs.studentName);
 
       // 开始动画
       setIsPicking(true);
@@ -375,11 +390,11 @@ const Classroom = () => {
               }))}
             />
             <Button
-              type="primary"
+              type={hasCheckedIn ? 'default' : 'primary'}
               onClick={() => void handleStudentCheckIn()}
-              disabled={!activeCheckInSession || activeCheckInSession.status !== 'active'}
+              disabled={!activeCheckInSession || activeCheckInSession.status !== 'active' || hasCheckedIn}
             >
-              课堂签到
+              {hasCheckedIn ? '签到完成' : '课堂签到'}
             </Button>
           </Space>
         )}

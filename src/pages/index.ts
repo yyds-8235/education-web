@@ -6,12 +6,14 @@ export { TestList, TestGrading, TestStatistics, TestAnswer, TestDetail, TestEdit
 export { Schedule } from './Schedule';
 export { Attendance } from './Attendance';
 export { Analytics } from './Analytics';
-export { StudentManagement } from './Student';
+export { StudentManagement, StudentLearningProfilePage } from './Student';
+export { default as StudentDetailPage } from './Student/StudentDetail';
+export { default as StudentFormPage } from './Student/StudentForm';
 export { Dashboard } from './Dashboard';
 export {
   StudentListPage,
   StudentCreatePage,
-  StudentDetailPage,
+  StudentDetailPage as PersonnelStudentDetailPage,
   StudentEditPage,
   TeacherListPage,
   TeacherCreatePage,

@@ -22,6 +22,7 @@ import { useAppSelector } from '@/store/hooks';
 import type { AttendanceRecord, AttendanceType } from '@/types';
 import {
     exportAttendanceExcel,
+    exportAttendancePdf,
     filterAttendanceRecords,
     type AttendanceExportFilters,
     type AttendanceReportType,
@@ -40,7 +41,7 @@ const labels: Record<AttendanceType, string> = {
     leave: '请假',
 };
 
-const gradePool = ['一年级', '二年级', '三年级', '四年级', '五年级'];
+const gradePool = ['初一', '初二', '初三', '高一', '高二','高三'];
 const classPool = ['1班', '2班', '3班', '4班'];
 const studentNamePool = [
     '王晨曦',
@@ -208,10 +209,6 @@ const Attendance = () => {
     const validateExport = (currentReportType: AttendanceReportType, filters: AttendanceExportFilters) => {
         const hasStudentFilter = Boolean(filters.studentName?.trim() || filters.studentNo?.trim());
 
-        if (exportFormat !== 'excel') {
-            return '当前仅支持 Excel 导出，请切换导出格式。';
-        }
-
         if (!filters.startDate || !filters.endDate) {
             return '请先选择导出时间范围。';
         }
@@ -253,7 +250,7 @@ const Attendance = () => {
         setExportModalOpen(true);
     };
 
-    const handleConfirmExport = () => {
+    const handleConfirmExport = async () => {
         if (!pendingExportFilters) {
             return;
         }
@@ -271,17 +268,23 @@ const Attendance = () => {
         }
 
         try {
-            const filename = exportAttendanceExcel(matchedRecords, {
+            const exportOptions = {
                 ...pendingExportFilters,
                 reportType: pendingReportType,
-            });
+            };
+            const filename = exportFormat === 'excel'
+                ? exportAttendanceExcel(matchedRecords, exportOptions)
+                : await exportAttendancePdf(matchedRecords, exportOptions);
 
             setReportType(pendingReportType);
             setExportModalOpen(false);
             setPendingExportFilters(null);
-            messageApi.success(`Excel 已导出：${filename}`);
-        } catch {
-            messageApi.error('导出失败，请稍后重试。');
+            messageApi.success(exportFormat === 'excel'
+                ? `Excel 已导出：${filename}`
+                : `PDF 已下载：${filename}`);
+        } catch (error) {
+            const messageText = error instanceof Error ? error.message : '导出失败，请稍后重试。';
+            messageApi.error(messageText);
         }
     };
 
@@ -343,7 +346,7 @@ const Attendance = () => {
                         onChange={setExportFormat}
                         options={[
                             { value: 'excel', label: 'Excel' },
-                            { value: 'pdf', label: 'PDF（暂不支持）' },
+                            { value: 'pdf', label: 'PDF' },
                         ]}
                         style={{ width: 150 }}
                     />
@@ -418,7 +421,7 @@ const Attendance = () => {
                     setExportModalOpen(false);
                     setPendingExportFilters(null);
                 }}
-                okText="导出 Excel"
+                okText={exportFormat === 'excel' ? '导出 Excel' : '导出 PDF'}
                 cancelText="取消"
             >
                 <div className="attendance-export-modal">

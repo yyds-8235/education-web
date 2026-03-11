@@ -1,4 +1,6 @@
 import dayjs from 'dayjs';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import type { AttendanceRecord, AttendanceType } from '@/types';
 
@@ -14,7 +16,7 @@ export interface AttendanceExportFilters {
     type?: AttendanceType;
 }
 
-export interface AttendanceExcelExportOptions extends AttendanceExportFilters {
+export interface AttendanceExportOptions extends AttendanceExportFilters {
     reportType: AttendanceReportType;
 }
 
@@ -42,6 +44,50 @@ const emptyStats = {
 };
 
 const normalize = (value?: string) => value?.trim().toLowerCase() ?? '';
+
+const getExportScope = (options: AttendanceExportOptions) => (
+    options.reportType === 'personal'
+        ? options.studentNo?.trim() || options.studentName?.trim() || '个人'
+        : options.reportType === 'class'
+            ? `${options.grade ?? ''}${options.className ?? ''}` || '班级'
+            : options.grade?.trim() || '年级'
+);
+
+const escapeHtml = (value: unknown) => String(value ?? '-')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const rowsToHtmlTable = (
+    title: string,
+    rows: Array<Record<string, unknown>>,
+) => {
+    if (!rows.length) {
+        return `<section><h2>${escapeHtml(title)}</h2><p>暂无数据</p></section>`;
+    }
+
+    const headers = Object.keys(rows[0]);
+    const headHtml = headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('');
+    const bodyHtml = rows
+        .map((row) => `<tr>${headers.map((header) => `<td>${escapeHtml(row[header])}</td>`).join('')}</tr>`)
+        .join('');
+
+    return `
+        <section>
+            <h2>${escapeHtml(title)}</h2>
+            <table>
+                <thead>
+                    <tr>${headHtml}</tr>
+                </thead>
+                <tbody>
+                    ${bodyHtml}
+                </tbody>
+            </table>
+        </section>
+    `;
+};
 
 export const filterAttendanceRecords = (
     records: AttendanceRecord[],
@@ -89,27 +135,11 @@ const buildOverviewStats = (records: AttendanceRecord[]) => {
     return records.reduce(
         (stats, record) => {
             stats.total += 1;
-
-            if (record.type === 'present') {
-                stats.present += 1;
-            }
-
-            if (record.type === 'late') {
-                stats.late += 1;
-            }
-
-            if (record.type === 'early_leave') {
-                stats.earlyLeave += 1;
-            }
-
-            if (record.type === 'absent') {
-                stats.absent += 1;
-            }
-
-            if (record.type === 'leave') {
-                stats.leave += 1;
-            }
-
+            if (record.type === 'present') stats.present += 1;
+            if (record.type === 'late') stats.late += 1;
+            if (record.type === 'early_leave') stats.earlyLeave += 1;
+            if (record.type === 'absent') stats.absent += 1;
+            if (record.type === 'leave') stats.leave += 1;
             return stats;
         },
         { ...emptyStats },
@@ -148,7 +178,6 @@ const buildPersonalSummaryRows = (records: AttendanceRecord[]) => {
         };
 
         current.total += 1;
-
         if (record.type === 'present') current.present += 1;
         if (record.type === 'late') current.late += 1;
         if (record.type === 'early_leave') current.earlyLeave += 1;
@@ -200,7 +229,6 @@ const buildClassSummaryRows = (records: AttendanceRecord[]) => {
         };
 
         current.total += 1;
-
         if (record.type === 'present') current.present += 1;
         if (record.type === 'late') current.late += 1;
         if (record.type === 'early_leave') current.earlyLeave += 1;
@@ -251,7 +279,6 @@ const buildGradeSummaryRows = (records: AttendanceRecord[]) => {
         };
 
         current.total += 1;
-
         if (record.type === 'present') current.present += 1;
         if (record.type === 'late') current.late += 1;
         if (record.type === 'early_leave') current.earlyLeave += 1;
@@ -273,22 +300,20 @@ const buildGradeSummaryRows = (records: AttendanceRecord[]) => {
     }));
 };
 
-const buildDetailRows = (records: AttendanceRecord[]) => {
-    return records.map((record) => ({
-        日期: record.date,
-        学号: record.studentNo,
-        姓名: record.studentName,
-        年级: record.grade,
-        班级: record.class,
-        考勤状态: attendanceTypeLabels[record.type],
-        签到时间: record.checkInTime ?? '-',
-        签退时间: record.checkOutTime ?? '-',
-        异常标记: record.isException ? '是' : '否',
-        异常说明: record.exceptionNote ?? '-',
-    }));
-};
+const buildDetailRows = (records: AttendanceRecord[]) => records.map((record) => ({
+    日期: record.date,
+    学号: record.studentNo,
+    姓名: record.studentName,
+    年级: record.grade,
+    班级: record.class,
+    考勤状态: attendanceTypeLabels[record.type],
+    签到时间: record.checkInTime ?? '-',
+    签退时间: record.checkOutTime ?? '-',
+    异常标记: record.isException ? '是' : '否',
+    异常说明: record.exceptionNote ?? '-',
+}));
 
-const buildOverviewRows = (records: AttendanceRecord[], options: AttendanceExcelExportOptions) => {
+const buildOverviewRows = (records: AttendanceRecord[], options: AttendanceExportOptions) => {
     const stats = buildOverviewStats(records);
 
     return [
@@ -309,13 +334,56 @@ const buildOverviewRows = (records: AttendanceRecord[], options: AttendanceExcel
     ];
 };
 
+const buildSummaryRows = (records: AttendanceRecord[], reportType: AttendanceReportType) => (
+    reportType === 'personal'
+        ? buildPersonalSummaryRows(records)
+        : reportType === 'class'
+            ? buildClassSummaryRows(records)
+            : buildGradeSummaryRows(records)
+);
+
 const applySheetStyles = (sheet: XLSX.WorkSheet, widths: number[]) => {
     sheet['!cols'] = widths.map((width) => ({ wch: width }));
 };
 
+const buildAttendancePdfHtml = (
+    filename: string,
+    reportType: AttendanceReportType,
+    overviewRows: Array<Record<string, unknown>>,
+    summaryRows: Array<Record<string, unknown>>,
+    detailRows: Array<Record<string, unknown>>,
+) => `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(filename)}</title>
+  <style>
+    body { font-family: Arial, "Microsoft YaHei", sans-serif; color: #1f2937; margin: 0; padding: 24px; background: #ffffff; }
+    .page { width: 1040px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 24px 0 12px; }
+    p { margin: 0 0 8px; color: #4b5563; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; }
+    th, td { border: 1px solid #d1d5db; padding: 8px 10px; font-size: 12px; vertical-align: top; word-break: break-word; }
+    th { background: #f3f4f6; text-align: left; }
+    .meta { margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>${escapeHtml(reportTypeLabels[reportType])}考勤报表</h1>
+    <p class="meta">导出文件：${escapeHtml(filename)}</p>
+    ${rowsToHtmlTable('导出信息', overviewRows)}
+    ${rowsToHtmlTable('汇总', summaryRows)}
+    ${rowsToHtmlTable('明细', detailRows)}
+  </div>
+</body>
+</html>`;
+
 export const exportAttendanceExcel = (
     records: AttendanceRecord[],
-    options: AttendanceExcelExportOptions,
+    options: AttendanceExportOptions,
 ): string => {
     const workbook = XLSX.utils.book_new();
 
@@ -323,13 +391,7 @@ export const exportAttendanceExcel = (
     applySheetStyles(overviewSheet, [18, 30]);
     XLSX.utils.book_append_sheet(workbook, overviewSheet, '导出信息');
 
-    const summaryRows =
-        options.reportType === 'personal'
-            ? buildPersonalSummaryRows(records)
-            : options.reportType === 'class'
-              ? buildClassSummaryRows(records)
-              : buildGradeSummaryRows(records);
-    const summarySheet = XLSX.utils.json_to_sheet(summaryRows);
+    const summarySheet = XLSX.utils.json_to_sheet(buildSummaryRows(records, options.reportType));
     applySheetStyles(summarySheet, [14, 14, 12, 12, 10, 10, 10, 10, 10, 10]);
     XLSX.utils.book_append_sheet(workbook, summarySheet, '汇总');
 
@@ -337,15 +399,72 @@ export const exportAttendanceExcel = (
     applySheetStyles(detailSheet, [14, 14, 14, 10, 10, 12, 12, 12, 10, 24]);
     XLSX.utils.book_append_sheet(workbook, detailSheet, '明细');
 
-    const scope =
-        options.reportType === 'personal'
-            ? options.studentNo?.trim() || options.studentName?.trim() || '个人'
-            : options.reportType === 'class'
-              ? `${options.grade ?? ''}${options.className ?? ''}` || '班级'
-              : options.grade?.trim() || '年级';
-
-    const filename = `${reportTypeLabels[options.reportType]}考勤报表_${scope}_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`;
+    const filename = `${reportTypeLabels[options.reportType]}考勤报表_${getExportScope(options)}_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`;
     XLSX.writeFile(workbook, filename);
     return filename;
 };
 
+export const exportAttendancePdf = async (
+    records: AttendanceRecord[],
+    options: AttendanceExportOptions,
+): Promise<string> => {
+    const filename = `${reportTypeLabels[options.reportType]}考勤报表_${getExportScope(options)}_${dayjs().format('YYYYMMDD_HHmmss')}.pdf`;
+    const overviewRows = buildOverviewRows(records, options);
+    const summaryRows = buildSummaryRows(records, options.reportType);
+    const detailRows = buildDetailRows(records);
+    const html = buildAttendancePdfHtml(filename, options.reportType, overviewRows, summaryRows, detailRows);
+
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.style.width = '1100px';
+    container.style.background = '#ffffff';
+    container.style.zIndex = '-1';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    try {
+        if ('fonts' in document) {
+            await (document as Document & { fonts: FontFaceSet }).fonts.ready;
+        }
+
+        const canvas = await html2canvas(container, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+        });
+
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: 'a4',
+            compress: true,
+        });
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imageData = canvas.toDataURL('image/png');
+
+        let remainingHeight = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imageData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        remainingHeight -= pageHeight;
+
+        while (remainingHeight > 0) {
+            position = remainingHeight - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imageData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+            remainingHeight -= pageHeight;
+        }
+
+        pdf.save(filename);
+        return filename;
+    } finally {
+        container.remove();
+    }
+};

@@ -248,18 +248,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
             <div className="attendance-table-toolbar">
                 <div className="toolbar-left">
                     <Input
-                        placeholder="按姓名筛选"
-                        allowClear
-                        value={filters.studentName}
-                        onChange={(event) =>
-                            setFilters((currentFilters) => ({
-                                ...currentFilters,
-                                studentName: event.target.value || undefined,
-                            }))
-                        }
-                        style={{ width: 160 }}
-                    />
-                    <Input
                         placeholder="按学号筛选"
                         allowClear
                         value={filters.studentNo}
@@ -267,6 +255,18 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
                             setFilters((currentFilters) => ({
                                 ...currentFilters,
                                 studentNo: event.target.value || undefined,
+                            }))
+                        }
+                        style={{ width: 160 }}
+                    />
+                    <Input
+                        placeholder="按姓名筛选"
+                        allowClear
+                        value={filters.studentName}
+                        onChange={(event) =>
+                            setFilters((currentFilters) => ({
+                                ...currentFilters,
+                                studentName: event.target.value || undefined,
                             }))
                         }
                         style={{ width: 160 }}

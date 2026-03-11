@@ -1,4 +1,6 @@
 import request from '@/utils/request';
+import { getMockStudentLearningProfile } from '@/mock/studentAnalytics';
+import type { StudentLearningProfile } from '@/types';
 
 export interface StudentProfile {
   id: string;
@@ -18,6 +20,8 @@ export interface StudentProfile {
   isKeyConcern: boolean;
   canView: boolean;
   canEdit: boolean;
+  email?: string;
+  phone?: string;
 }
 
 export interface StudentListParams {
@@ -78,49 +82,46 @@ export interface StudentMetaResponse {
   householdTypes: string[];
 }
 
-/**
- * 获取学生列表（分页 + 筛选）
- */
+export interface GetStudentLearningProfileOptions {
+  seedStudent?: {
+    id?: string;
+    studentNo?: string;
+    name?: string;
+    username?: string;
+    grade?: string;
+    className?: string;
+    guardian?: string;
+    phone?: string;
+    email?: string;
+    tags?: string[];
+  };
+}
+
 export const getStudentListApi = async (params: StudentListParams): Promise<StudentListResponse> => {
-  const response = await request.get('/admin/students/xq', { params });
+  const response = await request.get('/admin/students', { params });
   return response.data.data;
 };
 
-/**
- * 获取学生详情
- */
 export const getStudentDetailApi = async (studentId: string): Promise<StudentProfile> => {
-  const response = await request.get(`/admin/students/xq/${studentId}`);
+  const response = await request.get(`/admin/students/${studentId}`);
   return response.data.data;
 };
 
-/**
- * 新增学生
- */
 export const createStudentApi = async (params: CreateStudentParams): Promise<StudentProfile> => {
-  const response = await request.post('/admin/students/xq', params);
+  const response = await request.post('/admin/students', params);
   return response.data.data;
 };
 
-/**
- * 更新学生信息
- */
 export const updateStudentApi = async (studentId: string, params: UpdateStudentParams): Promise<StudentProfile> => {
-  const response = await request.put(`/admin/students/xq/${studentId}`, params);
+  const response = await request.put(`/admin/students/${studentId}`, params);
   return response.data.data;
 };
 
-/**
- * 删除学生
- */
 export const deleteStudentApi = async (studentId: string): Promise<{ id: string }> => {
-  const response = await request.delete(`/admin/students/xq/${studentId}`);
+  const response = await request.delete(`/admin/students/${studentId}`);
   return response.data.data;
 };
 
-/**
- * 更新学生权限
- */
 export const updateStudentPermissionsApi = async (
   studentId: string,
   params: UpdatePermissionsParams
@@ -129,18 +130,29 @@ export const updateStudentPermissionsApi = async (
   return response.data.data;
 };
 
-/**
- * 批量同步学生档案
- */
 export const syncStudentsApi = async (params?: SyncStudentsParams): Promise<{ syncedCount: number; syncedAt: string; failed: string[] }> => {
   const response = await request.post('/admin/students/sync', params || {});
   return response.data.data;
 };
 
-/**
- * 获取学生管理元数据
- */
 export const getStudentMetaApi = async (): Promise<StudentMetaResponse> => {
   const response = await request.get('/admin/students/meta');
   return response.data.data;
+};
+
+export const getStudentLearningProfileApi = async (
+  studentId: string,
+  options?: GetStudentLearningProfileOptions,
+): Promise<StudentLearningProfile> => {
+  try {
+    const response = await request.get(`/teacher/students/${studentId}/learning-profile`);
+    return response.data.data;
+  } catch {
+    try {
+      const response = await request.get(`/admin/students/${studentId}/learning-profile`);
+      return response.data.data;
+    } catch {
+      return getMockStudentLearningProfile(studentId, options?.seedStudent);
+    }
+  }
 };

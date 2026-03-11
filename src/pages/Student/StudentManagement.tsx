@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
+  Avatar,
   Button,
   Card,
   Divider,
   Empty,
-  Form,
   Input,
   List,
-  Modal,
   Popconfirm,
   Popover,
   Select,
@@ -16,9 +16,11 @@ import {
   Table,
   Tag,
   Typography,
+  Upload,
   message,
 } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons';
+import type { UploadProps } from 'antd';
+import { DeleteOutlined, EditOutlined, ImportOutlined, PlusOutlined, SyncOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { mockStudents } from '@/mock/users';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -42,34 +44,11 @@ import './StudentManagement.css';
 const { Title, Text } = Typography;
 
 type PovertyLevel = '非困难' | '一般困难' | '困难' | '特别困难';
-type HouseholdType = '城镇' | '农村';
 type ArchiveFilter = PovertyLevel | 'funded';
 
 type StudentProfile = ApiStudentProfile;
 
-interface ProfileFormValues {
-  studentNo: string;
-  name: string;
-  username: string;
-  password?: string;
-  grade: string;
-  class: string;
-  guardian: string;
-  povertyLevel: PovertyLevel;
-  isSponsored: boolean;
-  householdType: HouseholdType;
-  isLeftBehind: boolean;
-  isDisabled: boolean;
-  isSingleParent: boolean;
-  isKeyConcern: boolean;
-  canView: boolean;
-  canEdit: boolean;
-  email?: string;
-  phone?: string;
-}
-
 const grades = ['初一', '初二', '初三', '高一', '高二', '高三'];
-const classes = ['1班', '2班', '3班', '4班'];
 const povertyLevels: PovertyLevel[] = ['非困难', '一般困难', '困难', '特别困难'];
 
 const getProfileTags = (profile: StudentProfile) => [
@@ -84,6 +63,7 @@ const getProfileTags = (profile: StudentProfile) => [
 
 const StudentManagement = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const { courses, students } = useAppSelector((state) => state.course);
   const [messageApi, contextHolder] = message.useMessage();
@@ -93,13 +73,11 @@ const StudentManagement = () => {
 
   const [profiles, setProfiles] = useState<StudentProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
   const [keyword, setKeyword] = useState('');
   const [gradeFilter, setGradeFilter] = useState<string>();
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>();
-  const [editingProfile, setEditingProfile] = useState<StudentProfile | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form] = Form.useForm<ProfileFormValues>();
 
   useEffect(() => {
     if (user?.role !== 'teacher') {
@@ -197,103 +175,6 @@ const StudentManagement = () => {
     messageApi.success('已完成学生数据同步');
   };
 
-  const openCreateModal = () => {
-    setEditingProfile(null);
-    form.setFieldsValue({
-      studentNo: '',
-      name: '',
-      username: '',
-      password: '',
-      grade: '初一',
-      class: '1班',
-      guardian: '',
-      povertyLevel: '非困难',
-      isSponsored: false,
-      householdType: '城镇',
-      isLeftBehind: false,
-      isDisabled: false,
-      isSingleParent: false,
-      isKeyConcern: false,
-      canView: true,
-      canEdit: true,
-      email: '',
-      phone: '',
-    });
-    setModalOpen(true);
-  };
-
-  const openEditModal = (profile: StudentProfile) => {
-    setEditingProfile(profile);
-    form.setFieldsValue({
-      studentNo: profile.studentNo,
-      name: profile.name,
-      username: profile.username,
-      grade: profile.grade,
-      class: profile.class,
-      guardian: profile.guardian,
-      povertyLevel: profile.povertyLevel,
-      isSponsored: profile.isSponsored,
-      householdType: profile.householdType,
-      isLeftBehind: profile.isLeftBehind,
-      isDisabled: profile.isDisabled,
-      isSingleParent: profile.isSingleParent,
-      isKeyConcern: profile.isKeyConcern,
-      canView: profile.canView,
-      canEdit: profile.canEdit,
-    });
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditingProfile(null);
-    form.resetFields();
-  };
-
-  const handleSaveProfile = async () => {
-// <<<<<<< HEAD
-//     const values = await form.validateFields();
-//     if (editingProfile) {
-//       setProfiles((prev) =>
-//         prev.map((item) =>
-//           item.id === editingProfile.id
-//             ? { ...item, ...values, syncedAt: new Date().toLocaleString() }
-//             : item
-//         )
-//       );
-//       messageApi.success('学生信息已更新');
-//     } else {
-//       const newProfile: StudentProfile = {
-//         id: `student-profile-${Date.now()}`,
-//         ...values,
-//         syncedAt: new Date().toLocaleString(),
-//       };
-//       setProfiles((prev) => [newProfile, ...prev]);
-//       messageApi.success('学生信息已新增');
-// =======
-    try {
-      const values = await form.validateFields();
-      if (editingProfile) {
-        await updateStudentApi(editingProfile.id, values);
-        messageApi.success('学生信息已更新');
-      } else {
-        await createStudentApi(values as CreateStudentParams);
-        messageApi.success('学生信息已新增');
-      }
-      closeModal();
-      await loadStudentList();
-    } catch (error) {
-      const err = error as Error;
-      messageApi.error(err.message || '保存失败');
-// >>>>>>> 4e3a27e0d8bd463a0a3c80e3c35b4a9d0aff7482
-    }
-  };
-
-// <<<<<<< HEAD
-//   const handleDeleteProfile = (id: string) => {
-//     setProfiles((prev) => prev.filter((item) => item.id !== id));
-//     messageApi.success('学生档案已删除');
-// =======
   const handleDeleteProfile = async (id: string) => {
     try {
       await deleteStudentApi(id);
@@ -303,12 +184,74 @@ const StudentManagement = () => {
       const err = error as Error;
       messageApi.error(err.message || '删除失败');
     }
-// >>>>>>> 4e3a27e0d8bd463a0a3c80e3c35b4a9d0aff7482
+  };
+
+  const handleImport = async (file: File) => {
+    setImporting(true);
+    try {
+      // 模拟导入功能
+      // 实际项目中应该调用导入API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      messageApi.success(`成功导入学生数据（文件：${file.name}）`);
+      await loadStudentList();
+    } catch (error) {
+      const err = error as Error;
+      messageApi.error(err.message || '导入失败');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const uploadProps: UploadProps = {
+    accept: '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel',
+    showUploadList: false,
+    beforeUpload: (file) => {
+      void handleImport(file as File);
+      return false; // 阻止自动上传
+    },
+  };
+
+  const handleViewLearningProfile = (profile: Partial<StudentProfile> & { id: string; name?: string; studentNo?: string }) => {
+    navigate(`/students/${profile.id}/learning`, {
+      state: {
+        student: {
+          id: profile.id,
+          name: profile.name,
+          studentNo: profile.studentNo,
+          username: 'username' in profile ? profile.username : undefined,
+          grade: 'grade' in profile ? profile.grade : undefined,
+          className: 'class' in profile ? profile.class : undefined,
+          guardian: 'guardian' in profile ? profile.guardian : undefined,
+          tags: profile.name ? ['点击查看学情信息'] : undefined,
+        },
+      },
+    });
   };
 
   const adminColumns: ColumnsType<StudentProfile> = [
     { title: '学号', dataIndex: 'studentNo', key: 'studentNo', width: 60 },
-    { title: '姓名', dataIndex: 'name', key: 'name', width: 60 },
+    {
+      title: '头像',
+      dataIndex: 'avatar',
+      key: 'avatar',
+      width: 60,
+      render: (avatar: string | undefined) => (
+        <Avatar src={avatar} icon={!avatar && <UserOutlined />} size={40} />
+      ),
+    },
+    {
+      title: '姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width: 120,
+      // render: (value: string) => (
+      //   <Space>
+      //     <span>{value}</span>
+      //     <Tag color="processing">查看详情</Tag>
+      //   </Space>
+      // ),
+    },
     { title: '账号', dataIndex: 'username', key: 'username', width: 60 },
     {
       title: '年级/班级',
@@ -356,7 +299,7 @@ const StudentManagement = () => {
                 content={popoverContent}
                 title={`${record.name} - 分类归档`}
               >
-                <Button type="link" size="small" className="archive-expand-btn">
+                <Button type="link" size="small" className="archive-expand-btn" onClick={(event) => event.stopPropagation()}>
                   展开 +{hiddenCount}
                 </Button>
               </Popover>
@@ -371,7 +314,11 @@ const StudentManagement = () => {
       key: 'canView',
       width: 60,
       render: (value: boolean, record) => (
-        <Switch checked={value} onChange={(checked) => updateProfile(record.id, { canView: checked })} />
+        <Switch
+          checked={value}
+          onClick={(_checked, event) => event?.stopPropagation()}
+          onChange={(checked) => updateProfile(record.id, { canView: checked })}
+        />
       ),
     },
     {
@@ -383,6 +330,7 @@ const StudentManagement = () => {
         <Switch
           checked={value}
           disabled={!record.canView}
+          onClick={(_checked, event) => event?.stopPropagation()}
           onChange={(checked) => updateProfile(record.id, { canEdit: checked })}
         />
       ),
@@ -393,7 +341,10 @@ const StudentManagement = () => {
       width: 60,
       render: (_, record) => (
         <Space size={0}>
-          <Button type="link" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
+          <Button type="link" icon={<EditOutlined />} onClick={(event) => {
+            event.stopPropagation();
+            navigate(`/students/${record.id}/edit`);
+          }}>
             编辑
           </Button>
           <Popconfirm
@@ -402,7 +353,7 @@ const StudentManagement = () => {
             cancelText="取消"
             onConfirm={() => handleDeleteProfile(record.id)}
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
+            <Button type="link" danger icon={<DeleteOutlined />} onClick={(event) => event.stopPropagation()}>
               删除
             </Button>
           </Popconfirm>
@@ -421,10 +372,15 @@ const StudentManagement = () => {
             <Text type="secondary">支持学生信息增删改查，分类归档默认精简显示，点击展开弹出完整小面板。</Text>
           </div>
           <Space>
+            <Upload {...uploadProps}>
+              <Button icon={<ImportOutlined />} loading={importing}>
+                导入学生
+              </Button>
+            </Upload>
             <Button icon={<SyncOutlined />} onClick={handleSyncLearningData}>
               同步数据
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/students/new')}>
               新增学生
             </Button>
           </Space>
@@ -475,6 +431,11 @@ const StudentManagement = () => {
             columns={adminColumns}
             dataSource={profiles}
             loading={loading}
+            rowClassName={() => 'student-clickable-row'}
+            onRow={(record) => ({
+              onClick: () => navigate(`/students/${record.id}/detail`),
+              title: '点击查看学生详情',
+            })}
             pagination={{
               current: pagination.page,
               pageSize: pagination.pageSize,
@@ -486,80 +447,6 @@ const StudentManagement = () => {
             scroll={{ x: 1300 }}
           />
         </Card>
-
-        <Modal
-          title={editingProfile ? '编辑学生' : '新增学生'}
-          open={modalOpen}
-          onCancel={closeModal}
-          onOk={() => void handleSaveProfile()}
-          okText="保存"
-          cancelText="取消"
-          width={760}
-        >
-          <Form form={form} layout="vertical">
-            <div className="student-form-grid">
-              <Form.Item name="studentNo" label="学号" rules={[{ required: true, message: '请输入学号' }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="username" label="账号" rules={[{ required: true, message: '请输入账号' }]}>
-                <Input />
-              </Form.Item>
-              {!editingProfile && (
-                <Form.Item name="password" label="密码" rules={[{ required: true, message: '请输入密码' }]}>
-                  <Input.Password />
-                </Form.Item>
-              )}
-              <Form.Item name="guardian" label="监护人" rules={[{ required: true, message: '请输入监护人' }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="grade" label="年级" rules={[{ required: true, message: '请选择年级' }]}>
-                <Select options={grades.map((value) => ({ value, label: value }))} />
-              </Form.Item>
-              <Form.Item name="class" label="班级" rules={[{ required: true, message: '请选择班级' }]}>
-                <Select options={classes.map((value) => ({ value, label: value }))} />
-              </Form.Item>
-              <Form.Item name="povertyLevel" label="贫困等级" rules={[{ required: true, message: '请选择贫困等级' }]}>
-                <Select options={povertyLevels.map((value) => ({ value, label: value }))} />
-              </Form.Item>
-              <Form.Item name="householdType" label="户籍类型" rules={[{ required: true, message: '请选择户籍类型' }]}>
-                <Select options={[{ value: '城镇', label: '城镇' }, { value: '农村', label: '农村' }]} />
-              </Form.Item>
-              <Form.Item name="email" label="邮箱">
-                <Input />
-              </Form.Item>
-              <Form.Item name="phone" label="手机号">
-                <Input />
-              </Form.Item>
-            </div>
-
-            <div className="student-form-switches">
-              <Form.Item name="isSponsored" label="是否资助对象" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-              <Form.Item name="isLeftBehind" label="是否留守儿童" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-              <Form.Item name="isDisabled" label="是否残疾" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-              <Form.Item name="isSingleParent" label="是否单亲家庭" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-              <Form.Item name="isKeyConcern" label="是否重点关注学生" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-              <Form.Item name="canView" label="查看权限" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-              <Form.Item name="canEdit" label="编辑权限" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </div>
-          </Form>
-        </Modal>
       </div>
     );
   }
@@ -614,12 +501,22 @@ const StudentManagement = () => {
                 dataSource={students}
                 renderItem={(student) => (
                   <List.Item
+                    style={{ cursor: 'pointer' }}
+                    title="点击查看学情信息"
+                    onClick={() => handleViewLearningProfile({
+                      id: student.studentId,
+                      name: student.studentName,
+                      studentNo: student.studentNo,
+                    })}
                     actions={[
                       <Button
                         key="remove"
                         type="link"
                         danger
-                        onClick={() => void handleRemoveStudent(student.studentId)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleRemoveStudent(student.studentId);
+                        }}
                       >
                         移除
                       </Button>,
@@ -629,6 +526,7 @@ const StudentManagement = () => {
                       title={
                         <Space>
                           <span>{student.studentName}</span>
+                          <Tag color="processing">点击查看学情</Tag>
                           <Tag>{student.studentNo}</Tag>
                         </Space>
                       }

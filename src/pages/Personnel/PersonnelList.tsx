@@ -31,7 +31,6 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
   const [records, setRecords] = useState<ManagedUser[]>([]);
   const [pagination, setPagination] = useState({ page: 1, pageSize: 8, total: 0, totalPages: 0 });
   const [keyword, setKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all');
   const [extraFilter, setExtraFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -66,7 +65,6 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
       records.filter((record) => {
         const text = `${record.username} ${record.real_name} ${record.email} ${record.phone}`.toLowerCase();
         const matchesKeyword = !keyword.trim() || text.includes(keyword.trim().toLowerCase());
-        const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
         const matchesExtra =
           extraFilter === 'all'
             ? true
@@ -76,9 +74,9 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
                 ? record.department === extraFilter
                 : true;
 
-        return matchesKeyword && matchesStatus && matchesExtra;
+        return matchesKeyword && matchesExtra;
       }),
-    [extraFilter, keyword, records, statusFilter],
+    [extraFilter, keyword, records],
   );
 
   const handleDelete = async (id: string) => {
@@ -145,14 +143,6 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
         key: 'phone',
         width: 170,
         align: 'center',
-      },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        key: 'status',
-        width: 110,
-        align: 'center',
-        render: (value: UserStatus) => <Tag color={statusColorMap[value]}>{statusTextMap[value]}</Tag>,
       },
     ];
 
@@ -288,16 +278,11 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
 
       <Card className="personnel-filter-card">
         <div className="personnel-filter-row">
-          <Input
+          <Input.Search
             placeholder={`搜索${meta.roleLabel}账号、姓名、邮箱、手机号`}
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             allowClear
-          />
-          <Select
-            value={statusFilter}
-            onChange={(value) => setStatusFilter(value)}
-            options={[{ label: '全部状态', value: 'all' }, ...statusOptions]}
           />
           <Select
             value={extraFilter}

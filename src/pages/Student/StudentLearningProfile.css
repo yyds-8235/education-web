@@ -1,0 +1,60 @@
+.student-learning-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-learning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.student-learning-title {
+  margin: 0 !important;
+}
+
+.student-learning-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.student-learning-hero-main {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.student-learning-hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student-learning-tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.student-learning-chart-card .ant-card-head-title {
+  font-size: 14px;
+}
+
+.student-learning-empty-card .ant-card-body {
+  padding: 32px 24px;
+}
+
+@media (max-width: 768px) {
+  .student-learning-header,
+  .student-learning-hero {
+    flex-direction: column;
+  }
+
+  .student-learning-hero-main {
+    align-items: flex-start;
+  }
+}

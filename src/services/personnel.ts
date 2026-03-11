@@ -1,18 +1,6 @@
-import type {
-  ManagedRole,
-  ManagedStudent,
-  ManagedTeacher,
-  ManagedUser,
-  UserStatus,
-} from '@/types';
-import { generateId } from '@/utils/generator';
-
-const PERSONNEL_STORAGE_KEY = 'education.personnel.store';
-
-interface PersonnelStore {
-  students: ManagedStudent[];
-  teachers: ManagedTeacher[];
-}
+import request from '@/utils/request';
+import type { PaginatedResponse } from '@/types/common';
+import type { ManagedRole, ManagedStudent, ManagedTeacher, ManagedUser, UserStatus } from '@/types';
 
 export interface PersonnelFormValues {
   username: string;
@@ -30,296 +18,245 @@ export interface PersonnelFormValues {
   subjects_json?: string[];
 }
 
-const defaultStudents: ManagedStudent[] = [
-  {
-    id: 'managed-student-1',
-    username: 'stu2026001',
-    real_name: '王晨曦',
-    email: 'stu2026001@example.com',
-    phone: '13800010001',
-    avatar: '',
-    role: 'student',
-    status: 'active',
-    created_at: '2026-02-18 09:30:00',
-    student_no: '2026001',
-    grade: '七年级',
-    class_name: '1班',
-    guardian: '王建国',
-  },
-  {
-    id: 'managed-student-2',
-    username: 'stu2026002',
-    real_name: '李欣怡',
-    email: 'stu2026002@example.com',
-    phone: '13800010002',
-    avatar: '',
-    role: 'student',
-    status: 'active',
-    created_at: '2026-02-19 10:15:00',
-    student_no: '2026002',
-    grade: '七年级',
-    class_name: '2班',
-    guardian: '李敏',
-  },
-  {
-    id: 'managed-student-3',
-    username: 'stu2025008',
-    real_name: '陈浩然',
-    email: 'stu2025008@example.com',
-    phone: '13800010008',
-    avatar: '',
-    role: 'student',
-    status: 'inactive',
-    created_at: '2026-01-12 14:20:00',
-    student_no: '2025008',
-    grade: '八年级',
-    class_name: '1班',
-    guardian: '陈伟',
-  },
-  {
-    id: 'managed-student-4',
-    username: 'stu2024016',
-    real_name: '赵子涵',
-    email: 'stu2024016@example.com',
-    phone: '13800010016',
-    avatar: '',
-    role: 'student',
-    status: 'suspended',
-    created_at: '2025-12-28 08:45:00',
-    student_no: '2024016',
-    grade: '九年级',
-    class_name: '3班',
-    guardian: '赵静',
-  },
-];
+export interface PersonnelImportResult {
+  importedCount: number;
+  skippedCount: number;
+  failedRows?: Array<{
+    rowNumber: number;
+    reason: string;
+  }>;
+}
 
-const defaultTeachers: ManagedTeacher[] = [
-  {
-    id: 'managed-teacher-1',
-    username: 'teacher_zhang',
-    real_name: '张老师',
-    email: 'teacher_zhang@example.com',
-    phone: '13900020001',
-    avatar: '',
-    role: 'teacher',
-    status: 'active',
-    created_at: '2026-01-08 08:30:00',
-    teacher_no: 'T2026001',
-    department: '初中部',
-    subjects_json: ['化学', '多媒体'],
-  },
-  {
-    id: 'managed-teacher-2',
-    username: 'teacher_wang',
-    real_name: '王老师',
-    email: 'teacher_wang@example.com',
-    phone: '13900020002',
-    avatar: '',
-    role: 'teacher',
-    status: 'active',
-    created_at: '2026-01-10 11:00:00',
-    teacher_no: 'T2026002',
-    department: '高中部',
-    subjects_json: ['英语'],
-  },
-  {
-    id: 'managed-teacher-3',
-    username: 'teacher_liu',
-    real_name: '刘老师',
-    email: 'teacher_liu@example.com',
-    phone: '13900020003',
-    avatar: '',
-    role: 'teacher',
-    status: 'inactive',
-    created_at: '2025-11-20 15:40:00',
-    teacher_no: 'T2025018',
-    department: '初中部',
-    subjects_json: ['语文', '班主任'],
-  },
-];
+export interface PersonnelAvatarUploadResult {
+  url: string;
+}
 
-const cloneStudent = (student: ManagedStudent): ManagedStudent => ({
-  ...student,
-});
+export type PersonnelListResult = PaginatedResponse<ManagedUser>;
 
-const cloneTeacher = (teacher: ManagedTeacher): ManagedTeacher => ({
-  ...teacher,
-  subjects_json: [...teacher.subjects_json],
-});
+type PersonnelApiRecord = Record<string, unknown>;
 
-const createDefaultStore = (): PersonnelStore => ({
-  students: defaultStudents.map(cloneStudent),
-  teachers: defaultTeachers.map(cloneTeacher),
-});
+const getResourcePath = (role: ManagedRole): string =>
+  role === 'student' ? '/admin/students' : '/admin/teachers';
 
-const cloneStore = (store: PersonnelStore): PersonnelStore => ({
-  students: store.students.map(cloneStudent),
-  teachers: store.teachers.map(cloneTeacher),
-});
-
-const readStore = (): PersonnelStore => {
-  if (typeof window === 'undefined') {
-    return createDefaultStore();
+const readString = (record: PersonnelApiRecord, keys: string[], fallback = ''): string => {
+  const key = keys.find((item) => record[item] !== undefined && record[item] !== null);
+  if (!key) {
+    return fallback;
   }
 
-  const cached = window.localStorage.getItem(PERSONNEL_STORAGE_KEY);
-  if (!cached) {
-    const initialStore = createDefaultStore();
-    window.localStorage.setItem(PERSONNEL_STORAGE_KEY, JSON.stringify(initialStore));
-    return initialStore;
+  return String(record[key] ?? fallback);
+};
+
+const readStringArray = (record: PersonnelApiRecord, keys: string[]): string[] => {
+  const key = keys.find((item) => record[item] !== undefined && record[item] !== null);
+  if (!key) {
+    return [];
   }
 
-  try {
-    const parsed = JSON.parse(cached) as PersonnelStore;
-    return cloneStore(parsed);
-  } catch {
-    const fallbackStore = createDefaultStore();
-    window.localStorage.setItem(PERSONNEL_STORAGE_KEY, JSON.stringify(fallbackStore));
-    return fallbackStore;
-  }
-};
-
-const writeStore = (store: PersonnelStore): void => {
-  if (typeof window === 'undefined') {
-    return;
+  const value = record[key];
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item)).filter(Boolean);
   }
 
-  window.localStorage.setItem(PERSONNEL_STORAGE_KEY, JSON.stringify(store));
+  if (typeof value === 'string') {
+    return value
+      .split(/[|,，、/]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
 };
 
-const isStudentRole = (role: ManagedRole): role is 'student' => role === 'student';
+const readStatus = (record: PersonnelApiRecord): UserStatus => {
+  const status = readString(record, ['status'], 'active');
+  if (status === 'inactive' || status === 'suspended') {
+    return status;
+  }
 
-const sortByCreatedAtDesc = <T extends ManagedUser>(records: T[]): T[] =>
-  [...records].sort((left, right) => right.created_at.localeCompare(left.created_at));
-
-export const getPersonnelList = (role: ManagedRole): ManagedUser[] => {
-  const store = readStore();
-  return isStudentRole(role)
-    ? sortByCreatedAtDesc(store.students)
-    : sortByCreatedAtDesc(store.teachers);
+  return 'active';
 };
 
-export const getPersonnelById = (role: ManagedRole, id: string): ManagedUser | undefined => {
-  return getPersonnelList(role).find((item) => item.id === id);
-};
+const mapStudentRecord = (record: PersonnelApiRecord): ManagedStudent => ({
+  id: readString(record, ['id', 'studentId']),
+  username: readString(record, ['username']),
+  real_name: readString(record, ['real_name', 'realName', 'name']),
+  email: readString(record, ['email']),
+  phone: readString(record, ['phone']),
+  avatar: readString(record, ['avatar']),
+  role: 'student',
+  status: readStatus(record),
+  created_at: readString(record, ['created_at', 'createdAt']),
+  student_no: readString(record, ['student_no', 'studentNo']),
+  grade: readString(record, ['grade']),
+  class_name: readString(record, ['class_name', 'className', 'class']),
+  guardian: readString(record, ['guardian']),
+});
 
-export const createPersonnel = (role: ManagedRole, values: PersonnelFormValues): ManagedUser => {
-  const store = readStore();
-  const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+const mapTeacherRecord = (record: PersonnelApiRecord): ManagedTeacher => ({
+  id: readString(record, ['id', 'teacherId']),
+  username: readString(record, ['username']),
+  real_name: readString(record, ['real_name', 'realName', 'name']),
+  email: readString(record, ['email']),
+  phone: readString(record, ['phone']),
+  avatar: readString(record, ['avatar']),
+  role: 'teacher',
+  status: readStatus(record),
+  created_at: readString(record, ['created_at', 'createdAt']),
+  teacher_no: readString(record, ['teacher_no', 'teacherNo']),
+  department: readString(record, ['department']),
+  subjects_json: readStringArray(record, ['subjects_json', 'subjectsJson', 'subjects']),
+});
 
-  if (isStudentRole(role)) {
-    const nextStudent: ManagedStudent = {
-      id: generateId(),
-      username: values.username,
-      real_name: values.real_name,
-      email: values.email,
-      phone: values.phone,
-      avatar: values.avatar,
-      role: 'student',
-      status: values.status,
-      created_at: createdAt,
-      student_no: values.student_no ?? '',
-      grade: values.grade ?? '',
-      class_name: values.class_name ?? '',
-      guardian: values.guardian ?? '',
+const mapPersonnelRecord = (role: ManagedRole, record: PersonnelApiRecord): ManagedUser =>
+  role === 'student' ? mapStudentRecord(record) : mapTeacherRecord(record);
+
+const extractListResult = (role: ManagedRole, data: unknown): PersonnelListResult => {
+  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    const payload = data as {
+      list?: unknown;
+      items?: unknown;
+      total?: unknown;
+      page?: unknown;
+      pageSize?: unknown;
+      totalPages?: unknown;
     };
+    const rawList = payload.list ?? payload.items;
+    const list = Array.isArray(rawList)
+      ? rawList.filter((item): item is PersonnelApiRecord => typeof item === 'object' && item !== null)
+      : [];
+    const total = Number(payload.total ?? list.length);
+    const pageSize = Number(payload.pageSize ?? (list.length || 10));
+    const page = Number(payload.page ?? 1);
+    const totalPages = Number(payload.totalPages ?? Math.max(1, Math.ceil(total / Math.max(1, pageSize))));
 
-    store.students = sortByCreatedAtDesc([nextStudent, ...store.students]);
-    writeStore(store);
-    return nextStudent;
+    return {
+      list: list.map((item) => mapPersonnelRecord(role, item)),
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   }
 
-  const nextTeacher: ManagedTeacher = {
-    id: generateId(),
-    username: values.username,
-    real_name: values.real_name,
-    email: values.email,
-    phone: values.phone,
-    avatar: values.avatar,
-    role: 'teacher',
-    status: values.status,
-    created_at: createdAt,
-    teacher_no: values.teacher_no ?? '',
-    department: values.department ?? '',
-    subjects_json: values.subjects_json ?? [],
-  };
+  if (Array.isArray(data)) {
+    const list = data.filter((item): item is PersonnelApiRecord => typeof item === 'object' && item !== null);
+    return {
+      list: list.map((item) => mapPersonnelRecord(role, item)),
+      total: list.length,
+      page: 1,
+      pageSize: list.length || 10,
+      totalPages: 1,
+    };
+  }
 
-  store.teachers = sortByCreatedAtDesc([nextTeacher, ...store.teachers]);
-  writeStore(store);
-  return nextTeacher;
+  return {
+    list: [],
+    total: 0,
+    page: 1,
+    pageSize: 10,
+    totalPages: 0,
+  };
 };
 
-export const updatePersonnel = (
+const toStudentPayload = (values: PersonnelFormValues) => ({
+  username: values.username,
+  realName: values.real_name,
+  email: values.email,
+  phone: values.phone,
+  avatar: values.avatar,
+  status: values.status,
+  studentNo: values.student_no,
+  grade: values.grade,
+  className: values.class_name,
+  guardian: values.guardian,
+});
+
+const toTeacherPayload = (values: PersonnelFormValues) => ({
+  username: values.username,
+  realName: values.real_name,
+  email: values.email,
+  phone: values.phone,
+  avatar: values.avatar,
+  status: values.status,
+  teacherNo: values.teacher_no,
+  department: values.department,
+  subjects: values.subjects_json ?? [],
+});
+
+const toPersonnelPayload = (role: ManagedRole, values: PersonnelFormValues) =>
+  role === 'student' ? toStudentPayload(values) : toTeacherPayload(values);
+
+export const getPersonnelList = async (role: ManagedRole): Promise<PersonnelListResult> => {
+  const response = await request.get(getResourcePath(role));
+  return extractListResult(role, response.data.data);
+};
+
+export const getPersonnelById = async (role: ManagedRole, id: string): Promise<ManagedUser> => {
+  const response = await request.get(`${getResourcePath(role)}/${id}`);
+  return mapPersonnelRecord(role, response.data.data as PersonnelApiRecord);
+};
+
+export const createPersonnel = async (role: ManagedRole, values: PersonnelFormValues): Promise<ManagedUser> => {
+  const response = await request.post(getResourcePath(role), toPersonnelPayload(role, values));
+  return mapPersonnelRecord(role, response.data.data as PersonnelApiRecord);
+};
+
+export const updatePersonnel = async (
   role: ManagedRole,
   id: string,
   values: PersonnelFormValues,
-): ManagedUser | undefined => {
-  const store = readStore();
-
-  if (isStudentRole(role)) {
-    let updatedStudent: ManagedStudent | undefined;
-    store.students = store.students.map((student) => {
-      if (student.id !== id) {
-        return student;
-      }
-
-      updatedStudent = {
-        ...student,
-        username: values.username,
-        real_name: values.real_name,
-        email: values.email,
-        phone: values.phone,
-        avatar: values.avatar,
-        status: values.status,
-        student_no: values.student_no ?? '',
-        grade: values.grade ?? '',
-        class_name: values.class_name ?? '',
-        guardian: values.guardian ?? '',
-      };
-      return updatedStudent;
-    });
-
-    writeStore(store);
-    return updatedStudent;
-  }
-
-  let updatedTeacher: ManagedTeacher | undefined;
-  store.teachers = store.teachers.map((teacher) => {
-    if (teacher.id !== id) {
-      return teacher;
-    }
-
-    updatedTeacher = {
-      ...teacher,
-      username: values.username,
-      real_name: values.real_name,
-      email: values.email,
-      phone: values.phone,
-      avatar: values.avatar,
-      status: values.status,
-      teacher_no: values.teacher_no ?? '',
-      department: values.department ?? '',
-      subjects_json: values.subjects_json ?? [],
-    };
-    return updatedTeacher;
-  });
-
-  writeStore(store);
-  return updatedTeacher;
+): Promise<ManagedUser> => {
+  const response = await request.put(`${getResourcePath(role)}/${id}`, toPersonnelPayload(role, values));
+  return mapPersonnelRecord(role, response.data.data as PersonnelApiRecord);
 };
 
-export const deletePersonnel = (role: ManagedRole, id: string): boolean => {
-  const store = readStore();
+export const deletePersonnel = async (role: ManagedRole, id: string): Promise<{ id: string }> => {
+  const response = await request.delete(`${getResourcePath(role)}/${id}`);
+  return response.data.data as { id: string };
+};
 
-  if (isStudentRole(role)) {
-    const before = store.students.length;
-    store.students = store.students.filter((student) => student.id !== id);
-    writeStore(store);
-    return before !== store.students.length;
-  }
+export const importPersonnel = async (
+  role: ManagedRole,
+  file: File,
+): Promise<PersonnelImportResult> => {
+  const formData = new FormData();
+  formData.append('file', file);
 
-  const before = store.teachers.length;
-  store.teachers = store.teachers.filter((teacher) => teacher.id !== id);
-  writeStore(store);
-  return before !== store.teachers.length;
+  const response = await request.post(`${getResourcePath(role)}/import`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  const data = (response.data.data ?? {}) as Record<string, unknown>;
+
+  return {
+    importedCount: Number(data.importedCount ?? data.successCount ?? 0),
+    skippedCount: Number(data.skippedCount ?? data.ignoredCount ?? 0),
+    failedRows: Array.isArray(data.failedRows)
+      ? data.failedRows
+          .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+          .map((item) => ({
+            rowNumber: Number(item.rowNumber ?? item.row ?? 0),
+            reason: String(item.reason ?? item.message ?? ''),
+          }))
+      : undefined,
+  };
+};
+
+export const uploadPersonnelAvatar = async (file: File): Promise<PersonnelAvatarUploadResult> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await request.post('/admin/personnel/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  const data = response.data.data as Record<string, unknown>;
+  return {
+    url: String(data.url ?? data.avatarUrl ?? ''),
+  };
 };

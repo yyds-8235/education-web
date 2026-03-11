@@ -39,6 +39,21 @@
   gap: 6px;
 }
 
+.personnel-avatar-trigger {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.personnel-avatar-trigger.is-editable {
+  cursor: pointer;
+}
+
+.personnel-avatar-trigger.is-editable:hover .ant-avatar {
+  opacity: 0.85;
+}
+
 .personnel-subject-tags {
   display: flex;
   flex-wrap: wrap;

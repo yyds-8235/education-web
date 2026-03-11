@@ -18,13 +18,13 @@ export const statusOptions = [
   { label: '冻结', value: 'suspended' },
 ] as const;
 
-export const gradeOptions = ['七年级', '八年级', '九年级', '高一', '高二', '高三'];
+export const gradeOptions = ['初一', '初二', '初三', '高一', '高二', '高三'];
 
-export const classOptions = ['1班', '2班', '3班', '4班', '5班'];
+export const classOptions = ['1班', '2班', '3班', '4班'];
 
 export const departmentOptions = ['小学部', '初中部', '高中部'];
 
-export const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '生物', '历史', '地理', '政治', '体育', '多媒体'];
+export const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '日语', '多媒体'];
 
 export const getPersonnelMeta = (role: 'student' | 'teacher') => {
   if (role === 'student') {

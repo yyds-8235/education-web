@@ -1,8 +1,9 @@
-import { Avatar, Button, Card, Descriptions, Result, Space, Tag, Typography } from 'antd';
+import { useEffect, useState } from 'react';
+import { Avatar, Button, Card, Descriptions, Result, Space, Spin, Tag, Typography, message } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
-import type { ManagedRole } from '@/types';
+import type { ManagedRole, ManagedUser } from '@/types';
 import { getPersonnelById } from '@/services/personnel';
 import { getPersonnelMeta, isStudentRecord, isTeacherRecord, statusColorMap, statusTextMap } from './shared';
 import './PersonnelManagement.css';
@@ -17,24 +18,65 @@ const PersonnelDetail = ({ role }: PersonnelDetailProps) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAppSelector((state) => state.auth);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [loading, setLoading] = useState(false);
+  const [currentRecord, setCurrentRecord] = useState<ManagedUser | null>(null);
 
   const meta = getPersonnelMeta(role);
-  const currentRecord = id ? getPersonnelById(role, id) : undefined;
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    const fetchDetail = async () => {
+      setLoading(true);
+      try {
+        const record = await getPersonnelById(role, id);
+        setCurrentRecord(record);
+      } catch (error) {
+        const messageText = error instanceof Error ? error.message : `获取${meta.roleLabel}详情失败`;
+        messageApi.error(messageText);
+        setCurrentRecord(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchDetail();
+  }, [id, meta.roleLabel, role]);
 
   if (user?.role !== 'admin') {
     return <Result status="403" title="仅教务处可访问人员管理" />;
   }
 
-  if (!id || !currentRecord) {
+  if (!id) {
+    return <Result status="404" title={`${meta.roleLabel}不存在`} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="personnel-page">
+        {contextHolder}
+        <Card>
+          <Spin />
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentRecord) {
     return <Result status="404" title={`${meta.roleLabel}不存在`} />;
   }
 
   return (
     <div className="personnel-page">
+      {contextHolder}
+
       <div className="personnel-page-header">
         <div>
           <Title level={3}>{meta.detailLabel}</Title>
-          <Paragraph type="secondary">详情页面独立展示，不使用弹窗。</Paragraph>
+          <Paragraph type="secondary">详情页使用真实接口拉取人员资料。</Paragraph>
         </div>
 
         <div className="personnel-page-actions">
@@ -68,16 +110,18 @@ const PersonnelDetail = ({ role }: PersonnelDetailProps) => {
           <Descriptions.Item label="账号">{currentRecord.username}</Descriptions.Item>
           <Descriptions.Item label="姓名">{currentRecord.real_name}</Descriptions.Item>
           <Descriptions.Item label="邮箱">{currentRecord.email}</Descriptions.Item>
-          <Descriptions.Item label={role === 'student' ? '手机号/监护人手机号' : '手机号'}>{currentRecord.phone}</Descriptions.Item>
+          <Descriptions.Item label={role === 'student' ? '手机号 / 监护人手机号' : '手机号'}>
+            {currentRecord.phone}
+          </Descriptions.Item>
           <Descriptions.Item label="状态">{statusTextMap[currentRecord.status]}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">{currentRecord.created_at}</Descriptions.Item>
+          <Descriptions.Item label="创建时间">{currentRecord.created_at || '-'}</Descriptions.Item>
 
           {isStudentRecord(currentRecord) ? (
             <>
               <Descriptions.Item label="学号">{currentRecord.student_no}</Descriptions.Item>
               <Descriptions.Item label="年级">{currentRecord.grade}</Descriptions.Item>
               <Descriptions.Item label="班级">{currentRecord.class_name}</Descriptions.Item>
-              <Descriptions.Item label="监护人姓名">{currentRecord.guardian}</Descriptions.Item>
+              <Descriptions.Item label="监护人">{currentRecord.guardian}</Descriptions.Item>
             </>
           ) : null}
 

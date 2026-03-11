@@ -12,6 +12,8 @@ import {
   TestStatistics,
   TestAnswer,
   TestDetail,
+  TestEditorPage,
+  TestSubmissionReview,
   Schedule,
   Attendance,
   Analytics,
@@ -69,6 +71,14 @@ export const router = createHashRouter([
         element: <TestList />,
       },
       {
+        path: 'tests/create',
+        element: <TestEditorPage />,
+      },
+      {
+        path: 'tests/:id/edit',
+        element: <TestEditorPage />,
+      },
+      {
         path: 'tests/answer',
         element: <TestAnswer />,
       },
@@ -79,6 +89,10 @@ export const router = createHashRouter([
       {
         path: 'tests/grading/:testId',
         element: <TestGrading />,
+      },
+      {
+        path: 'tests/grading/:testId/submissions/:submissionId',
+        element: <TestSubmissionReview />,
       },
       {
         path: 'tests/statistics/:testId',
@@ -95,6 +109,10 @@ export const router = createHashRouter([
       {
         path: 'analytics',
         element: <Analytics />,
+      },
+      {
+        path: 'personnel',
+        element: <Navigate to="/personnel/students" replace />,
       },
       {
         path: 'personnel/students',

@@ -13,7 +13,7 @@ import type {
 import type { RootState } from '@/store';
 import { generateId } from '@/utils/generator';
 import { getJoinedCourseIds, isStudentJoinedCourse } from '@/utils/course';
-import { initialCourses, initialCourseStudents } from '@/mock/courses';
+// import { initialCourses, initialCourseStudents } from '@/mock/courses';
 import { mockStudents } from '@/mock/users';
 import {
   addTeacherCourseStudentsApi,
@@ -44,14 +44,14 @@ interface CourseState {
 }
 
 const initialState: CourseState = {
-  allCourses: initialCourses,
-  courses: initialCourses,
+  allCourses: [],
+  courses: [],
   currentCourse: null,
   students: [],
   candidateStudents: [],
-  courseStudentMap: initialCourseStudents,
+  courseStudentMap: {},
   loading: false,
-  total: initialCourses.length,
+  total: 0,
   page: 1,
   pageSize: 10,
 };

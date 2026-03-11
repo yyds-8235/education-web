@@ -4,7 +4,7 @@ import { RouterProvider } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { router } from './router';
 import { store } from './store';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntApp } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import 'dayjs/locale/zh-cn';
 import './styles/index.css';
@@ -48,7 +48,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
       <ConfigProvider locale={zhCN} theme={themeConfig}>
-        <RouterProvider router={router} />
+        <AntApp>
+          <RouterProvider router={router} />
+        </AntApp>
       </ConfigProvider>
     </Provider>
   </StrictMode>

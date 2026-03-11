@@ -82,7 +82,7 @@ export interface StudentMetaResponse {
  * 获取学生列表（分页 + 筛选）
  */
 export const getStudentListApi = async (params: StudentListParams): Promise<StudentListResponse> => {
-  const response = await request.get('/admin/students', { params });
+  const response = await request.get('/admin/students/xq', { params });
   return response.data.data;
 };
 
@@ -90,7 +90,7 @@ export const getStudentListApi = async (params: StudentListParams): Promise<Stud
  * 获取学生详情
  */
 export const getStudentDetailApi = async (studentId: string): Promise<StudentProfile> => {
-  const response = await request.get(`/admin/students/${studentId}`);
+  const response = await request.get(`/admin/students/xq/${studentId}`);
   return response.data.data;
 };
 
@@ -98,7 +98,7 @@ export const getStudentDetailApi = async (studentId: string): Promise<StudentPro
  * 新增学生
  */
 export const createStudentApi = async (params: CreateStudentParams): Promise<StudentProfile> => {
-  const response = await request.post('/admin/students', params);
+  const response = await request.post('/admin/students/xq', params);
   return response.data.data;
 };
 
@@ -106,7 +106,7 @@ export const createStudentApi = async (params: CreateStudentParams): Promise<Stu
  * 更新学生信息
  */
 export const updateStudentApi = async (studentId: string, params: UpdateStudentParams): Promise<StudentProfile> => {
-  const response = await request.put(`/admin/students/${studentId}`, params);
+  const response = await request.put(`/admin/students/xq/${studentId}`, params);
   return response.data.data;
 };
 
@@ -114,7 +114,7 @@ export const updateStudentApi = async (studentId: string, params: UpdateStudentP
  * 删除学生
  */
 export const deleteStudentApi = async (studentId: string): Promise<{ id: string }> => {
-  const response = await request.delete(`/admin/students/${studentId}`);
+  const response = await request.delete(`/admin/students/xq/${studentId}`);
   return response.data.data;
 };
 

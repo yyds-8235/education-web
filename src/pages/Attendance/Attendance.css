@@ -21,6 +21,26 @@
   gap: 12px;
 }
 
+.attendance-export-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attendance-export-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attendance-export-summary {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
 .attendance-log-card .ant-card-body {
   max-height: 280px;
   overflow: auto;

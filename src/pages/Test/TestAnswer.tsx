@@ -5,6 +5,7 @@ import {
   Card,
   Empty,
   Input,
+  Modal,
   Radio,
   Space,
   Spin,
@@ -26,7 +27,9 @@ const TestAnswer = () => {
   const { user } = useAppSelector((state) => state.auth);
   const { currentTest, currentSubmission, loading } = useAppSelector((state) => state.test);
   const [messageApi, contextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const testId = (location.state?.testId ?? location.state?.test?.id) as string | undefined;
 
@@ -73,23 +76,38 @@ const TestAnswer = () => {
   };
 
   const handleSubmit = async () => {
+    
     if (!currentTest) {
       return;
     }
 
-    const payload = currentTest.questions.map((question) => ({
-      questionId: question.id,
-      answer: answers[question.id] ?? '',
-    }));
+    const unansweredCount = currentTest.questions.filter((q) => !answers[q.id]?.trim()).length;
+    const unansweredText = unansweredCount > 0 ? `\n\n您还有 ${unansweredCount} 道题目未作答，是否确认提交？` : '\n\n请确认提交您的答案，提交后将无法修改。';
 
-    try {
-      await dispatch(submitTest({ testId: currentTest.id, answers: payload })).unwrap();
-      messageApi.success('测试提交成功');
-      navigate('/tests');
-    } catch (error) {
-      const err = error as Error;
-      messageApi.error(err.message || '提交失败');
-    }
+    modal.confirm({
+      title: '确认提交',
+      content: unansweredText,
+      okText: '确认提交',
+      cancelText: '取消',
+      onOk: async () => {
+        setSubmitting(true);
+        const payload = currentTest.questions.map((question) => ({
+          questionId: question.id,
+          answer: answers[question.id] ?? '',
+        }));
+
+        try {
+          await dispatch(submitTest({ testId: currentTest.id, answers: payload })).unwrap();
+          messageApi.success('测试提交成功');
+          navigate('/tests');
+        } catch (error) {
+          const err = error as Error;
+          messageApi.error(err.message || '提交失败');
+        } finally {
+          setSubmitting(false);
+        }
+      },
+    });
   };
 
   if (!testId) {
@@ -107,6 +125,7 @@ const TestAnswer = () => {
   return (
     <div className="test-answer-page">
       {contextHolder}
+      {modalContextHolder}
       <div className="test-header">
         <Space>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/tests')}>
@@ -202,9 +221,11 @@ const TestAnswer = () => {
 
       <div style={{ marginTop: 16 }}>
         {!isReadOnly && currentTest.status === 'published' && (
-          <Button type="primary" onClick={() => void handleSubmit()}>
-            提交测试
-          </Button>
+          <Spin spinning={submitting}>
+            <Button type="primary" onClick={() => void handleSubmit()} disabled={submitting}>
+              提交测试
+            </Button>
+          </Spin>
         )}
       </div>
     </div>

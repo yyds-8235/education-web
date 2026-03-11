@@ -467,7 +467,6 @@
 | isKeyConcern | student_profiles.is_key_concern |
 | canView | student_profiles.can_view |
 | canEdit | student_profiles.can_edit |
-| syncedAt | student_profiles.synced_at |
 
 ## 6. 错误码建议
 

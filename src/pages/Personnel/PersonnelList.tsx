@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Card, Input, Popconfirm, Result, Select, Space, Table, Tag, Typography, message } from 'antd';
-import type { TableColumnsType } from 'antd';
-import { PlusOutlined, UserOutlined } from '@ant-design/icons';
+import { Avatar, Button, Card, Input, Popconfirm, Result, Select, Space, Table, Tag, Typography, Upload, message } from 'antd';
+import type { TableColumnsType, UploadProps } from 'antd';
+import { ImportOutlined, PlusOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
 import type { ManagedRole, ManagedUser, UserStatus } from '@/types';
-import { deletePersonnel, getPersonnelList } from '@/services/personnel';
+import { deletePersonnel, getPersonnelList, importPersonnel } from '@/services/personnel';
 import {
   departmentOptions,
   getPersonnelMeta,
@@ -29,18 +29,36 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
   const { user } = useAppSelector((state) => state.auth);
   const [messageApi, contextHolder] = message.useMessage();
   const [records, setRecords] = useState<ManagedUser[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 8, total: 0, totalPages: 0 });
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all');
   const [extraFilter, setExtraFilter] = useState<string>('all');
+  const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const meta = getPersonnelMeta(role);
 
-  const refreshList = () => {
-    setRecords(getPersonnelList(role));
+  const refreshList = async () => {
+    setLoading(true);
+    try {
+      const result = await getPersonnelList(role);
+      setRecords(result.list);
+      setPagination({
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages,
+      });
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : `${meta.roleLabel}错误`;
+      messageApi.error(messageText);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    refreshList();
+    void refreshList();
   }, [role]);
 
   const filteredRecords = useMemo(
@@ -63,15 +81,36 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
     [extraFilter, keyword, records, statusFilter],
   );
 
-  const handleDelete = (id: string) => {
-    const deleted = deletePersonnel(role, id);
-    if (deleted) {
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePersonnel(role, id);
       messageApi.success(`${meta.roleLabel}已删除`);
-      refreshList();
-      return;
+      await refreshList();
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : `删除${meta.roleLabel}失败`;
+      messageApi.error(messageText);
     }
+  };
 
-    messageApi.error(`未找到要删除的${meta.roleLabel}`);
+  const importProps: UploadProps = {
+    accept: '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel',
+    showUploadList: false,
+    beforeUpload: async (file) => {
+      setImporting(true);
+      try {
+        const result = await importPersonnel(role, file as File);
+        const summary = `成功导入 ${result.importedCount} 名${meta.roleLabel}${result.skippedCount ? `，跳过 ${result.skippedCount} 条` : ''}`;
+        messageApi.success(summary);
+        await refreshList();
+      } catch (error) {
+        const messageText = error instanceof Error ? error.message : `导入${meta.roleLabel}失败`;
+        messageApi.error(messageText);
+      } finally {
+        setImporting(false);
+      }
+
+      return Upload.LIST_IGNORE;
+    },
   };
 
   const columns: TableColumnsType<ManagedUser> = useMemo(() => {
@@ -80,6 +119,7 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
         title: meta.roleLabel,
         key: 'profile',
         width: 220,
+        align: 'center',
         render: (_, record) => (
           <Space>
             <Avatar src={record.avatar || undefined} icon={!record.avatar && <UserOutlined />}>
@@ -97,25 +137,22 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
         dataIndex: 'email',
         key: 'email',
         width: 220,
+        align: 'center',
       },
       {
-        title: role === 'student' ? '手机号/监护人手机号' : '手机号',
+        title: role === 'student' ? '手机号 / 监护人手机号' : '手机号',
         dataIndex: 'phone',
         key: 'phone',
         width: 170,
+        align: 'center',
       },
       {
         title: '状态',
         dataIndex: 'status',
         key: 'status',
         width: 110,
+        align: 'center',
         render: (value: UserStatus) => <Tag color={statusColorMap[value]}>{statusTextMap[value]}</Tag>,
-      },
-      {
-        title: '创建时间',
-        dataIndex: 'created_at',
-        key: 'created_at',
-        width: 180,
       },
     ];
 
@@ -127,18 +164,21 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
           title: '学号',
           key: 'student_no',
           width: 120,
+          align: 'center',
           render: (_, record) => (isStudentRecord(record) ? record.student_no : '-'),
         },
         {
           title: '年级 / 班级',
           key: 'grade_class',
           width: 150,
-          render: (_, record) => (isStudentRecord(record) ? `${record.grade} · ${record.class_name}` : '-'),
+          align: 'center',
+          render: (_, record) => (isStudentRecord(record) ? `${record.grade} / ${record.class_name}` : '-'),
         },
         {
           title: '监护人',
           key: 'guardian',
           width: 120,
+          align: 'center',
           render: (_, record) => (isStudentRecord(record) ? record.guardian : '-'),
         },
       );
@@ -149,6 +189,7 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
         1,
         0,
         {
+          align: 'center',
           title: '教工号',
           key: 'teacher_no',
           width: 130,
@@ -158,12 +199,14 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
           title: '所属学部',
           key: 'department',
           width: 120,
+          align: 'center',
           render: (_, record) => (isTeacherRecord(record) ? record.department : '-'),
         },
         {
           title: '任教学科',
           key: 'subjects_json',
           width: 240,
+          align: 'center',
           render: (_, record) =>
             isTeacherRecord(record)
               ? record.subjects_json.map((subject) => (
@@ -180,17 +223,33 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
       title: '操作',
       key: 'actions',
       fixed: 'right',
-      width: 180,
+      width: 120,
+      align: 'center',
       render: (_, record) => (
         <Space size="small">
-          <Button type="link" onClick={() => navigate(`${meta.listPath}/${record.id}`)}>
-            详情
-          </Button>
-          <Button type="link" onClick={() => navigate(`${meta.listPath}/${record.id}/edit`)}>
+          <Button
+            type="link"
+            onClick={(event) => {
+              event.stopPropagation();
+              navigate(`${meta.listPath}/${record.id}/edit`);
+            }}
+          >
             编辑
           </Button>
-          <Popconfirm title={`确认删除该${meta.roleLabel}？`} onConfirm={() => handleDelete(record.id)}>
-            <Button type="link" danger>
+          <Popconfirm
+            title={`确认删除该${meta.roleLabel}？`}
+            onConfirm={(event) => {
+              event?.stopPropagation();
+              void handleDelete(record.id);
+            }}
+          >
+            <Button
+              type="link"
+              danger
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            >
               删除
             </Button>
           </Popconfirm>
@@ -212,10 +271,15 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
       <div className="personnel-page-header">
         <div>
           <Title level={3}>{meta.title}</Title>
-          <Paragraph type="secondary">当前使用静态数据演示基础增删改查，详情和编辑均使用独立页面。</Paragraph>
+          <Paragraph type="secondary">列表、详情、编辑、删除与 Excel 导入均已切换为真实后端请求。</Paragraph>
         </div>
 
         <div className="personnel-page-actions">
+          <Upload {...importProps}>
+            <Button icon={<ImportOutlined />} loading={importing}>
+              {`导入${meta.roleLabel}`}
+            </Button>
+          </Upload>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(meta.createPath)}>
             {meta.createLabel}
           </Button>
@@ -252,9 +316,19 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
       <Card>
         <Table
           rowKey="id"
+          loading={loading}
           columns={columns}
           dataSource={filteredRecords}
-          pagination={{ pageSize: 8, showSizeChanger: false }}
+          onRow={(record) => ({
+            onClick: () => navigate(`${meta.listPath}/${record.id}`),
+            style: { cursor: 'pointer' },
+          })}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.pageSize,
+            total: filteredRecords.length,
+            showSizeChanger: false,
+          }}
           scroll={{ x: 1280 }}
         />
       </Card>

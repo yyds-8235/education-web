@@ -185,6 +185,8 @@ export const studentCheckIn = createAsyncThunk(
 
     const target = session.records.find((record) => record.studentId === user.id);
     if (!target) {
+      console.log(session);
+      
       throw new Error('你未加入该课程，无法签到');
     }
 

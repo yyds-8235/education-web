@@ -1,4 +1,4 @@
-﻿﻿import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+﻿﻿﻿﻿import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { AuthState, LoginParams, User } from '@/types';
 import { loginApi, getCurrentUserApi } from '@/services/auth';
 

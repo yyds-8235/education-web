@@ -4,7 +4,7 @@ import { message } from 'antd';
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: 'http://36.133.40.172:8082/api',
+  baseURL: 'http://localhost:8082/api',
   timeout: 10000
 });
 

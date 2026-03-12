@@ -22,7 +22,7 @@ export const gradeOptions = ['初一', '初二', '初三', '高一', '高二', '
 
 export const classOptions = ['1班', '2班', '3班', '4班'];
 
-export const departmentOptions = ['小学部', '初中部', '高中部'];
+export const departmentOptions = [ '初中部', '高中部'];
 
 export const subjectOptions = ['语文', '数学', '英语', '物理', '化学', '日语', '多媒体'];
 

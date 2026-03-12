@@ -19,7 +19,7 @@ const Dashboard = () => {
 
   const getWelcomeText = () => {
     if (!user) return '欢迎使用教学管理系统';
-    if (user.role === 'teacher') return '欢迎来到教师工作台';
+    if (user.role === 'teacher') return '欢迎来到教师首页';
     if (user.role === 'student') return '欢迎来到学习中心';
     return '欢迎来到教务处管理后台';
   };

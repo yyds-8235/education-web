@@ -7,6 +7,7 @@ export interface StudentProfile {
   studentNo: string;
   name: string;
   username: string;
+  avatar?: string;
   grade: string;
   class: string;
   guardian: string;
@@ -48,6 +49,7 @@ export interface CreateStudentParams {
   name: string;
   username: string;
   password: string;
+  avatar?: string;
   grade: string;
   class: string;
   guardian?: string;
@@ -80,6 +82,10 @@ export interface StudentMetaResponse {
   classes: string[];
   povertyLevels: string[];
   householdTypes: string[];
+}
+
+export interface StudentAvatarUploadResult {
+  url: string;
 }
 
 export interface GetStudentLearningProfileOptions {
@@ -137,6 +143,42 @@ export const syncStudentsApi = async (params?: SyncStudentsParams): Promise<{ sy
 
 export const getStudentMetaApi = async (): Promise<StudentMetaResponse> => {
   const response = await request.get('/admin/students/meta');
+  return response.data.data;
+};
+
+export const uploadStudentAvatar = async (file: File): Promise<StudentAvatarUploadResult> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await request.post('/admin/personnel/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  const data = response.data.data as Record<string, unknown>;
+  return {
+    url: String(data.url ?? data.avatarUrl ?? data.avatar ?? ''),
+  };
+};
+
+export interface ImportStudentsResult {
+  total: number;
+  success: number;
+  failed: number;
+  errors: Array<{ row: number; studentNo: string; error: string }>;
+}
+
+export const importStudentsApi = async (file: File): Promise<ImportStudentsResult> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await request.post('/admin/students/import', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
   return response.data.data;
 };
 

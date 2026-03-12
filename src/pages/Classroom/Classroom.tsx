@@ -602,20 +602,22 @@ const Classroom = () => {
                       ) : (
                         [...interactions].filter(item => 
                           item.topic === selectedTopic
-                        ).map((item) => (
+                        ).map((item) => {
+                          const isSelf = item.senderId === user?.id;
+                          return (
                         <div
                           key={item.id}
                           style={{
                             display: 'flex',
                             marginBottom: '16px',
-                            justifyContent: item.senderRole === user?.role ? 'flex-end' : 'flex-start'
+                            justifyContent: isSelf ? 'flex-end' : 'flex-start'
                           }}
                         >
                           <div
                             style={{
                               maxWidth: '60%',
                               display: 'flex',
-                              flexDirection: item.senderRole === user?.role ? 'row-reverse' : 'row'
+                              flexDirection: isSelf ? 'row-reverse' : 'row'
                             }}
                           >
                             <div
@@ -623,14 +625,14 @@ const Classroom = () => {
                                 width: '40px',
                                 height: '40px',
                                 borderRadius: '50%',
-                                backgroundColor: item.senderRole === 'teacher' ? '#1890ff' : '#52c41a',
+                                backgroundColor: isSelf ? '#95ec69' : (item.senderRole === 'teacher' ? '#1890ff' : '#52c41a'),
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
                                 fontWeight: 'bold',
                                 fontSize: '16px',
-                                margin: item.senderRole === user?.role ? '0 0 0 12px' : '0 12px 0 0',
+                                margin: isSelf ? '0 0 0 12px' : '0 12px 0 0',
                                 flexShrink: 0
                               }}
                             >
@@ -642,7 +644,7 @@ const Classroom = () => {
                                   marginBottom: '4px',
                                   color: '#999',
                                   fontSize: '12px',
-                                  textAlign: item.senderRole === user?.role ? 'right' : 'left'
+                                  textAlign: isSelf ? 'right' : 'left'
                                 }}
                               >
                                 {item.senderName} · {dayjs(item.createdAt).format('HH:mm')}
@@ -652,7 +654,7 @@ const Classroom = () => {
                                 style={{
                                   padding: '10px 14px',
                                   borderRadius: '8px',
-                                  backgroundColor: item.senderRole === user?.role ? '#95ec69' : 'white',
+                                  backgroundColor: isSelf ? '#95ec69' : 'white',
                                   boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                                   wordBreak: 'break-word'
                                 }}
@@ -662,7 +664,8 @@ const Classroom = () => {
                             </div>
                           </div>
                         </div>
-                      ))
+                        );
+                      })
                       )}
                     </div>
 

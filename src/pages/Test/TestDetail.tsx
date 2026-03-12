@@ -1,4 +1,4 @@
-﻿﻿import { useEffect, useMemo } from 'react';
+﻿﻿﻿﻿import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Card, Empty, Space, Spin, Tag, Typography, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -6,6 +6,12 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchSubmission, fetchTestById } from '@/store/slices/testSlice';
 
 const { Title, Text, Paragraph } = Typography;
+
+const appealStatusTextMap = {
+  pending: '待处理',
+  accepted: '已通过',
+  rejected: '已驳回',
+} as const;
 
 const TestDetail = () => {
   const location = useLocation();
@@ -89,7 +95,7 @@ const TestDetail = () => {
             <Space wrap>
               <Text>我的得分：{submission.totalScore ?? '-'}</Text>
               <Text>提交状态：{submission.status === 'graded' ? '已批改' : '待批改'}</Text>
-              {submission.appealStatus && <Tag color="orange">申诉状态：{submission.appealStatus}</Tag>}
+              {submission.appealStatus && <Tag color="orange">申诉状态：{appealStatusTextMap[submission.appealStatus]}</Tag>}
             </Space>
           )}
         </Space>

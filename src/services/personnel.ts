@@ -4,6 +4,7 @@ import type { ManagedRole, ManagedStudent, ManagedTeacher, ManagedUser, UserStat
 
 export interface PersonnelFormValues {
   username: string;
+  password?: string;
   real_name: string;
   email: string;
   phone: string;
@@ -161,6 +162,7 @@ const extractListResult = (role: ManagedRole, data: unknown): PersonnelListResul
 
 const toStudentPayload = (values: PersonnelFormValues) => ({
   username: values.username,
+  password: values.password,
   realName: values.real_name,
   email: values.email,
   phone: values.phone,
@@ -174,6 +176,7 @@ const toStudentPayload = (values: PersonnelFormValues) => ({
 
 const toTeacherPayload = (values: PersonnelFormValues) => ({
   username: values.username,
+  password: values.password,
   realName: values.real_name,
   email: values.email,
   phone: values.phone,

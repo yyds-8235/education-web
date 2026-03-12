@@ -7,10 +7,8 @@ import { useAppSelector } from '@/store/hooks';
 import type { ManagedRole } from '@/types';
 import { createPersonnel, getPersonnelById, updatePersonnel, uploadPersonnelAvatar } from '@/services/personnel';
 import {
-  classOptions,
   departmentOptions,
   getPersonnelMeta,
-  gradeOptions,
   isStudentRecord,
   isTeacherRecord,
   statusOptions,
@@ -26,6 +24,7 @@ interface PersonnelFormPageProps {
 
 interface FormValues {
   username: string;
+  password?: string;
   real_name: string;
   email: string;
   phone: string;
@@ -39,6 +38,19 @@ interface FormValues {
   department?: string;
   subjects_json?: string[];
 }
+
+const getUsernamePrefix = (role: ManagedRole) => (role === 'teacher' ? 'tch' : 'stu');
+
+const ensureUsernamePrefix = (username: string, role: ManagedRole) => {
+  const trimmedUsername = username.trim();
+  const prefix = getUsernamePrefix(role);
+
+  if (!trimmedUsername) {
+    return prefix;
+  }
+
+  return trimmedUsername.startsWith(prefix) ? trimmedUsername : `${prefix}${trimmedUsername}`;
+};
 
 const PersonnelForm = ({ role }: PersonnelFormPageProps) => {
   const navigate = useNavigate();
@@ -58,6 +70,7 @@ const PersonnelForm = ({ role }: PersonnelFormPageProps) => {
     const initForm = async () => {
       if (!isEditMode || !id) {
         form.setFieldsValue({
+          username: getUsernamePrefix(role),
           status: 'active',
           avatar: '',
           subjects_json: [],
@@ -115,7 +128,12 @@ const PersonnelForm = ({ role }: PersonnelFormPageProps) => {
     const payload = {
       ...form.getFieldsValue(true),
       ...values,
+      username: isEditMode ? values.username : ensureUsernamePrefix(values.username, role),
     } as FormValues;
+
+    if (!payload.password?.trim()) {
+      delete payload.password;
+    }
     const saveMessageKey = 'personnel-save';
 
     setSubmitting(true);
@@ -249,9 +267,21 @@ const PersonnelForm = ({ role }: PersonnelFormPageProps) => {
             <Form.Item
               name="username"
               label="账号"
+              extra={!isEditMode ? (role === 'teacher' ? '账号需以 tch 开头，例如 tch1001' : '账号需以 stu 开头，例如 stu1001') : undefined}
               rules={[{ required: true, message: '请输入账号' }]}
             >
-              <Input placeholder="请输入账号" disabled={isEditMode} />
+              <Input placeholder={isEditMode ? '账号不可编辑' : (role === 'teacher' ? '请输入教师账号，如 tch1001' : '请输入学生账号，如 stu1001')} disabled={isEditMode} />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label="密码"
+              extra={isEditMode ? '如不修改密码可留空' : '新增时请设置登录密码'}
+              rules={isEditMode ? [] : [{ required: true, message: '请输入密码' }]}
+            >
+              <Input.Password placeholder={isEditMode ? '如不修改密码请留空' : '请输入密码'} />
+            </Form.Item>
+            <Form.Item name="teacher_no" label="教工号" rules={[{ required: true, message: '请输入教工号' }]}>
+              <Input placeholder="请输入教工号" disabled={isEditMode} />
             </Form.Item>
             <Form.Item name="real_name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
               <Input placeholder="请输入姓名" />
@@ -277,42 +307,21 @@ const PersonnelForm = ({ role }: PersonnelFormPageProps) => {
               <Select options={statusOptions.map((item) => ({ ...item }))} />
             </Form.Item>
 
-            {role === 'student' ? (
-              <>
-                <Form.Item name="student_no" label="学号" rules={[{ required: true, message: '请输入学号' }]}>
-                  <Input placeholder="请输入学号" />
-                </Form.Item>
-                <Form.Item name="grade" label="年级" rules={[{ required: true, message: '请选择年级' }]}>
-                  <Select options={gradeOptions.map((item) => ({ label: item, value: item }))} />
-                </Form.Item>
-                <Form.Item name="class_name" label="班级" rules={[{ required: true, message: '请选择班级' }]}>
-                  <Select options={classOptions.map((item) => ({ label: item, value: item }))} />
-                </Form.Item>
-                <Form.Item name="guardian" label="监护人" rules={[{ required: true, message: '请输入监护人姓名' }]}>
-                  <Input placeholder="请输入监护人姓名" />
-                </Form.Item>
-              </>
-            ) : (
-              <>
-                <Form.Item name="teacher_no" label="教工号" rules={[{ required: true, message: '请输入教工号' }]}>
-                  <Input placeholder="请输入教工号" />
-                </Form.Item>
-                <Form.Item name="department" label="所属学院" rules={[{ required: true, message: '请选择所属学院' }]}>
-                  <Select options={departmentOptions.map((item) => ({ label: item, value: item }))} />
-                </Form.Item>
-                <Form.Item
-                  name="subjects_json"
-                  label="任教学科"
-                  rules={[{ required: true, message: '请至少选择一个任教学科' }]}
-                >
-                  <Select
-                    mode="tags"
-                    options={subjectOptions.map((item) => ({ label: item, value: item }))}
-                    placeholder="请输入或选择学科"
-                  />
-                </Form.Item>
-              </>
-            )}
+            <Form.Item name="department" label="所属学院" rules={[{ required: true, message: '请选择所属学院' }]}>
+              <Select options={departmentOptions.map((item) => ({ label: item, value: item }))} />
+            </Form.Item>
+            <Form.Item
+              name="subjects_json"
+              label="任教学科"
+              rules={[{ required: true, message: '请至少选择一个任教学科' }]}
+            >
+              <Select
+                mode="tags"
+                options={subjectOptions.map((item) => ({ label: item, value: item }))}
+                placeholder="请输入或选择学科"
+              />
+            </Form.Item>
+
           </div>
 
           <div className="personnel-form-actions">

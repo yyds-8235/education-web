@@ -4,7 +4,7 @@ import type { TableColumnsType, UploadProps } from 'antd';
 import { ImportOutlined, PlusOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
-import type { ManagedRole, ManagedUser, UserStatus } from '@/types';
+import type { ManagedRole, ManagedUser } from '@/types';
 import { deletePersonnel, getPersonnelList, importPersonnel } from '@/services/personnel';
 import {
   departmentOptions,
@@ -12,9 +12,6 @@ import {
   gradeOptions,
   isStudentRecord,
   isTeacherRecord,
-  statusColorMap,
-  statusOptions,
-  statusTextMap,
 } from './shared';
 import './PersonnelManagement.css';
 

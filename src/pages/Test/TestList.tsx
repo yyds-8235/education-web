@@ -35,6 +35,12 @@ const statusLabelMap: Record<Test['status'], string> = {
   ended: '已结束',
 };
 
+const appealStatusTextMap: Record<NonNullable<TestSubmission['appealStatus']>, string> = {
+  pending: '待处理',
+  accepted: '已通过',
+  rejected: '已驳回',
+};
+
 const TestList = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -270,7 +276,7 @@ const TestList = () => {
                     </Tag>
                     <Text>得分：{item.submission.totalScore ?? '-'}</Text>
                     {item.submission.appealStatus && (
-                      <Tag color="orange">申诉状态：{item.submission.appealStatus}</Tag>
+                      <Tag color="orange">申诉状态：{appealStatusTextMap[item.submission.appealStatus]}</Tag>
                     )}
                   </Space>
                 }

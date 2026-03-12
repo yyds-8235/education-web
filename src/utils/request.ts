@@ -1,9 +1,10 @@
 import axios from 'axios';
 import type { ApiResponse } from '@/types';
+import { message } from 'antd';
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: 'http://localhost:8082/api',
+  baseURL: 'http://36.133.40.172:8082/api',
   timeout: 10000
 });
 
@@ -22,6 +23,8 @@ request.interceptors.request.use(
   }
 );
 
+let isRelogin = false;
+
 // 响应拦截器
 request.interceptors.response.use(
   (response) => {
@@ -29,21 +32,30 @@ request.interceptors.response.use(
 
     // 如果返回的状态码不是200或0，则显示错误信息
     if (res.code !== 200 && res.code !== 0) {
-
-      // 401: Token过期或未登录
-      if (res.code === 401) {
-                    console.log(res);
-
-        // 只有在非登录接口时才跳转
-        if (!response.config?.url?.includes('/login')) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('userInfo');
-          window.location.href = `${window.location.origin}${window.location.pathname}#/login`;
-        }
+  // 401: Token过期或未登录
+  if (res.code === 401) {
+    if (!response.config?.url?.includes('/login')) {
+      
+      // 检查是否已经在执行重新登录的流程
+      if (!isRelogin) {
+        isRelogin = true; // 上锁
+        
+        // 可选：这里可以加一个全局的 UI 提示，比如 message.error('登录已过期，请重新登录');
+        message.error('登录已过期，请重新登录');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        
+        // 延迟跳转，给用户看一眼错误提示的时间，并防止短时间内重复触发
+        setTimeout(() => {
+          isRelogin = false; // 解锁
+          // 推荐使用 replace 避免破坏路由历史
+          window.location.replace('/login'); // 如果是 Hash 路由请用 window.location.hash = '/login';
+        }, 1000);
       }
-
-      return Promise.reject(new Error(res.message || '请求失败'));
     }
+  }
+  return Promise.reject(new Error(res.message || '请求失败'));
+}
 
     return {
       ...response,

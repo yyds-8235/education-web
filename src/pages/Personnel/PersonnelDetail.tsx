@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
 import type { ManagedRole, ManagedUser } from '@/types';
 import { getPersonnelById } from '@/services/personnel';
-import { getPersonnelMeta, isStudentRecord, isTeacherRecord, statusColorMap, statusTextMap } from './shared';
+import { getPersonnelMeta, isTeacherRecord, statusColorMap, statusTextMap } from './shared';
 import './PersonnelManagement.css';
 
 const { Paragraph, Text, Title } = Typography;
@@ -107,27 +107,20 @@ const PersonnelDetail = ({ role }: PersonnelDetailProps) => {
 
       <Card>
         <Descriptions column={2} bordered>
-          <Descriptions.Item label="账号">{currentRecord.username}</Descriptions.Item>
-          <Descriptions.Item label="姓名">{currentRecord.real_name}</Descriptions.Item>
-          <Descriptions.Item label="邮箱">{currentRecord.email}</Descriptions.Item>
-          <Descriptions.Item label={role === 'student' ? '手机号 / 监护人手机号' : '手机号'}>
-            {currentRecord.phone}
-          </Descriptions.Item>
-          <Descriptions.Item label="状态">{statusTextMap[currentRecord.status]}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">{currentRecord.created_at || '-'}</Descriptions.Item>
 
-          {isStudentRecord(currentRecord) ? (
-            <>
-              <Descriptions.Item label="学号">{currentRecord.student_no}</Descriptions.Item>
-              <Descriptions.Item label="年级">{currentRecord.grade}</Descriptions.Item>
-              <Descriptions.Item label="班级">{currentRecord.class_name}</Descriptions.Item>
-              <Descriptions.Item label="监护人">{currentRecord.guardian}</Descriptions.Item>
-            </>
-          ) : null}
 
           {isTeacherRecord(currentRecord) ? (
             <>
+              <Descriptions.Item label="账号">{currentRecord.username}</Descriptions.Item>
               <Descriptions.Item label="教工号">{currentRecord.teacher_no}</Descriptions.Item>
+
+              <Descriptions.Item label="姓名">{currentRecord.real_name}</Descriptions.Item>
+              <Descriptions.Item label="邮箱">{currentRecord.email}</Descriptions.Item>
+              <Descriptions.Item label="手机号">
+                {currentRecord.phone}
+              </Descriptions.Item>
+              <Descriptions.Item label="状态">{statusTextMap[currentRecord.status]}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">{currentRecord.created_at || '-'}</Descriptions.Item>
               <Descriptions.Item label="所属学部">{currentRecord.department}</Descriptions.Item>
               <Descriptions.Item label="任教学科" span={2}>
                 <div className="personnel-subject-tags">

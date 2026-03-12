@@ -10,7 +10,6 @@ import {
   ExperimentOutlined,
   IdcardOutlined,
   LogoutOutlined,
-  TeamOutlined,
   UserOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons';
@@ -35,7 +34,7 @@ interface TopMenuItem {
 const topMenus: TopMenuItem[] = [
   {
     key: '/',
-    label: '工作台',
+    label: '首页',
     icon: <DashboardOutlined />,
     roles: ['teacher', 'student', 'admin'],
   },

@@ -8,6 +8,7 @@ import {
   Empty,
   Input,
   List,
+  Modal,
   Popconfirm,
   Popover,
   Select,
@@ -32,12 +33,10 @@ import {
 } from '@/store/slices/courseSlice';
 import {
   getStudentListApi,
-  createStudentApi,
-  updateStudentApi,
   deleteStudentApi,
   updateStudentPermissionsApi,
+  importStudentsApi,
   type StudentProfile as ApiStudentProfile,
-  type CreateStudentParams,
 } from '@/services/student';
 import './StudentManagement.css';
 
@@ -67,6 +66,7 @@ const StudentManagement = () => {
   const { user } = useAppSelector((state) => state.auth);
   const { courses, students } = useAppSelector((state) => state.course);
   const [messageApi, contextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
 
   const [selectedCourseId, setSelectedCourseId] = useState<string>();
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -189,11 +189,28 @@ const StudentManagement = () => {
   const handleImport = async (file: File) => {
     setImporting(true);
     try {
-      // 模拟导入功能
-      // 实际项目中应该调用导入API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const result = await importStudentsApi(file);
 
-      messageApi.success(`成功导入学生数据（文件：${file.name}）`);
+      if (result.failed > 0) {
+        const errorDetails = result.errors.slice(0, 5).map(e => `第${e.row}行 (${e.studentNo}): ${e.error}`).join('\n');
+        const moreText = result.errors.length > 5 ? `\n...还有 ${result.errors.length - 5} 条错误` : '';
+        
+        modal.error({
+          title: '导入完成，部分数据失败',
+          content: (
+            <div>
+              <p>成功: {result.success} 条，失败: {result.failed} 条</p>
+              <pre style={{ maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap', fontSize: 12 }}>
+                {errorDetails}{moreText}
+              </pre>
+            </div>
+          ),
+          okText: '确定',
+        });
+      } else {
+        messageApi.success(`成功导入 ${result.success} 条学生数据`);
+      }
+      
       await loadStudentList();
     } catch (error) {
       const err = error as Error;
@@ -351,9 +368,19 @@ const StudentManagement = () => {
             title="确认删除该学生档案？"
             okText="删除"
             cancelText="取消"
-            onConfirm={() => handleDeleteProfile(record.id)}
+            onConfirm={(e) => {
+              e?.stopPropagation();
+              handleDeleteProfile(record.id);
+            }}
           >
-            <Button type="link" danger icon={<DeleteOutlined />} onClick={(event) => event.stopPropagation()}>
+            <Button 
+              type="link" 
+              danger 
+              icon={<DeleteOutlined />} 
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            >
               删除
             </Button>
           </Popconfirm>
@@ -366,6 +393,7 @@ const StudentManagement = () => {
     return (
       <div className="student-management-page">
         {contextHolder}
+        {modalContextHolder}
         <div className="student-management-header student-admin-header">
           <div>
             <Title level={3}>学生信息管理系统</Title>
@@ -433,7 +461,13 @@ const StudentManagement = () => {
             loading={loading}
             rowClassName={() => 'student-clickable-row'}
             onRow={(record) => ({
-              onClick: () => navigate(`/students/${record.id}/detail`),
+              onClick: (e) => {
+                const target = e.target as HTMLElement;
+                const isButtonClick = target.closest('button') || target.closest('a') || target.closest('.ant-popover');
+                if (!isButtonClick) {
+                  navigate(`/students/${record.id}/detail`);
+                }
+              },
               title: '点击查看学生详情',
             })}
             pagination={{
@@ -451,13 +485,10 @@ const StudentManagement = () => {
     );
   }
 
-  if (user?.role !== 'teacher') {
-    return <Empty description="仅教师或教务处可查看学生管理" />;
-  }
-
   return (
     <div className="student-management-page">
       {contextHolder}
+      {modalContextHolder}
       <div className="student-management-header">
         <Title level={3}>学生管理</Title>
         <Text type="secondary">按课程管理已加入学生，支持教师拉取与移除。</Text>

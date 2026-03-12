@@ -1,62 +1,11 @@
-import { Card, Col, List, Row, Statistic, Tag, Typography } from 'antd';
-import { BookOutlined, CheckCircleOutlined, ExperimentOutlined, TeamOutlined } from '@ant-design/icons';
-import { useMemo } from 'react';
-import { mockStudents } from '@/mock/users';
+import { Card, List, Tag, Typography } from 'antd';
 import { useAppSelector } from '@/store/hooks';
-import { getJoinedCourseIds } from '@/utils/course';
 import './Dashboard.css';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 const Dashboard = () => {
   const { user } = useAppSelector((state) => state.auth);
-  const { allCourses, courseStudentMap } = useAppSelector((state) => state.course);
-  const { allTests } = useAppSelector((state) => state.test);
-
-  const summary = useMemo(() => {
-    if (!user) {
-      return {
-        courseCount: 0,
-        studentCount: 0,
-        activeCourseCount: 0,
-        testCount: 0,
-      };
-    }
-
-    if (user.role === 'teacher') {
-      const teacherCourses = allCourses.filter((course) => course.teacherId === user.id);
-      const studentCount = teacherCourses.reduce(
-        (sum, course) => sum + (courseStudentMap[course.id]?.length ?? 0),
-        0
-      );
-
-      return {
-        courseCount: teacherCourses.length,
-        studentCount,
-        activeCourseCount: teacherCourses.filter((course) => course.status === 'active').length,
-        testCount: allTests.filter((test) => teacherCourses.some((course) => course.id === test.courseId)).length,
-      };
-    }
-
-    if (user.role === 'admin') {
-      return {
-        courseCount: allCourses.length,
-        studentCount: mockStudents.length,
-        activeCourseCount: allCourses.filter((course) => course.status === 'active').length,
-        testCount: allTests.length,
-      };
-    }
-
-    const joinedCourseIds = getJoinedCourseIds(allCourses, courseStudentMap, user.id);
-    const joinedCourses = allCourses.filter((course) => joinedCourseIds.has(course.id));
-
-    return {
-      courseCount: joinedCourses.length,
-      studentCount: 1,
-      activeCourseCount: joinedCourses.filter((course) => course.status === 'active').length,
-      testCount: allTests.filter((test) => joinedCourses.some((course) => course.id === test.courseId)).length,
-    };
-  }, [allCourses, allTests, courseStudentMap, user]);
 
   const todoList =
     user?.role === 'teacher'
@@ -67,42 +16,81 @@ const Dashboard = () => {
 
   const roleColor = user?.role === 'teacher' ? 'blue' : user?.role === 'student' ? 'green' : 'gold';
   const roleLabel = user?.role === 'teacher' ? '教师' : user?.role === 'student' ? '学生' : '教务处';
-  const studentMetricLabel =
-    user?.role === 'teacher' ? '已覆盖学生' : user?.role === 'student' ? '我的课程' : '学生总数';
+
+  const getWelcomeText = () => {
+    if (!user) return '欢迎使用教学管理系统';
+    if (user.role === 'teacher') return '欢迎来到教师工作台';
+    if (user.role === 'student') return '欢迎来到学习中心';
+    return '欢迎来到教务处管理后台';
+  };
+
+  const getDescriptionText = () => {
+    if (!user) return '';
+    if (user.role === 'teacher') return '管理您的课程、学生和教学活动，轻松开展教学工作';
+    if (user.role === 'student') return '浏览课程、参与互动、完成测试，享受便捷的学习体验';
+    return '全面管理教学事务，提高教务工作效率';
+  };
+
+  const getFeatures = () => {
+    if (!user) return [];
+    if (user.role === 'teacher') {
+      return [
+        { title: '课程管理', desc: '创建和管理课程，上传教学资料' },
+        { title: '学生管理', desc: '查看和管理班级学生信息' },
+        { title: '课堂互动', desc: '发起签到、话题讨论和随机点名' },
+        { title: '测试系统', desc: '创建测验、批改作业和查看统计' },
+      ];
+    }
+    if (user.role === 'student') {
+      return [
+        { title: '课程学习', desc: '浏览课程内容，获取学习资料' },
+        { title: '课堂参与', desc: '完成签到，参与话题互动' },
+        { title: '在线测试', desc: '参加测验，查看成绩和分析' },
+        { title: '个人中心', desc: '查看学习进度和个人信息' },
+      ];
+    }
+    return [
+      { title: '课程安排', desc: '管理课程表和自动排课' },
+      { title: '学生档案', desc: '维护学生信息和权限管理' },
+      { title: '考勤统计', desc: '查看和分析考勤数据' },
+      { title: '学情分析', desc: '多维度统计和报表导出' },
+    ];
+  };
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        <Title level={3}>工作台</Title>
-        <Paragraph type="secondary">
-          当前身份：<Tag color={roleColor}>{roleLabel}</Tag>
+        <Title level={2}>{getWelcomeText()}</Title>
+        <Paragraph type="secondary" style={{ fontSize: '16px', marginTop: '8px' }}>
+          {getDescriptionText()}
         </Paragraph>
+        {user && (
+          <div style={{ marginTop: '16px' }}>
+            <Tag color={roleColor} style={{ fontSize: '14px', padding: '4px 12px' }}>
+              当前身份：{roleLabel}
+            </Tag>
+            {user.realName && (
+              <Text strong style={{ marginLeft: '12px', fontSize: '16px' }}>
+                {user.realName}
+              </Text>
+            )}
+          </div>
+        )}
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="课程数量" value={summary.courseCount} prefix={<BookOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title={studentMetricLabel} value={summary.studentCount} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="活跃课程" value={summary.activeCourseCount} prefix={<CheckCircleOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="测试数量" value={summary.testCount} prefix={<ExperimentOutlined />} />
-          </Card>
-        </Col>
-      </Row>
+      <div className="dashboard-features">
+        <Title level={4} style={{ marginBottom: '20px' }}>功能概览</Title>
+        <div className="feature-grid">
+          {getFeatures().map((feature, index) => (
+            <Card key={index} className="feature-card" hoverable>
+              <Title level={5} style={{ marginBottom: '8px' }}>{feature.title}</Title>
+              <Text type="secondary">{feature.desc}</Text>
+            </Card>
+          ))}
+        </div>
+      </div>
 
-      <Card className="dashboard-card" title="本端建议操作">
+      <Card className="dashboard-card" title="建议操作" style={{ marginTop: '24px' }}>
         <List
           dataSource={todoList}
           renderItem={(item, index) => (

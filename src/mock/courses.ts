@@ -1,4 +1,4 @@
-﻿import type { Course, CourseChapter, CourseStudent, CourseResource } from '@/types';
+import type { Course, CourseChapter, CourseStudent, CourseResource } from '@/types';
 import { mockStudents, mockTeacher } from './users';
 
 const now = new Date().toISOString();
@@ -127,9 +127,9 @@ export const initialCourses: Course[] = [
   },
   {
     id: 'course-4',
-    name: '高一物理力学基础',
-    description: '高中阶段物理入门课程，聚焦受力分析与牛顿定律。',
-    grade: '高一',
+    name: '初一物理入门',
+    description: '初中物理入门课程，聚焦力学基础与运动学。',
+    grade: '初一',
     class: '3班',
     subject: '物理',
     teacherId: mockTeacher.id,
@@ -139,11 +139,11 @@ export const initialCourses: Course[] = [
       {
         id: 'chapter-5',
         courseId: 'course-4',
-        title: '第1章 受力分析',
-        description: '学习受力分析方法和典型模型。',
+        title: '第1章 力学基础',
+        description: '学习力学基本概念和简单受力分析。',
         order: 1,
         resources: [
-          buildResource('res-7', 'chapter-5', '受力分析案例.pptx', 'ppt', 1024 * 1024 * 4, '/mock/files/force-analysis.pptx'),
+          buildResource('res-7', 'chapter-5', '力学基础讲义.pptx', 'ppt', 1024 * 1024 * 4, '/mock/files/physics-mechanics.pptx'),
         ],
         createdAt: now,
       },
@@ -155,9 +155,9 @@ export const initialCourses: Course[] = [
   },
   {
     id: 'course-5',
-    name: '高二化学反应原理',
-    description: '高二化学核心课程，覆盖反应速率与化学平衡。',
-    grade: '高二',
+    name: '初二化学启蒙',
+    description: '初二化学入门课程，覆盖物质结构与基本化学反应。',
+    grade: '初二',
     class: '2班',
     subject: '化学',
     teacherId: mockTeacher.id,
@@ -167,11 +167,11 @@ export const initialCourses: Course[] = [
       {
         id: 'chapter-6',
         courseId: 'course-5',
-        title: '第1章 化学平衡',
-        description: '理解平衡移动规律及其应用。',
+        title: '第1章 物质的性质与变化',
+        description: '理解物质的物理性质与化学变化。',
         order: 1,
         resources: [
-          buildResource('res-8', 'chapter-6', '化学平衡讲义.pdf', 'pdf', 1024 * 1024 * 3, '/mock/files/chem-balance.pdf'),
+          buildResource('res-8', 'chapter-6', '化学入门讲义.pdf', 'pdf', 1024 * 1024 * 3, '/mock/files/chem-intro.pdf'),
         ],
         createdAt: now,
       },
@@ -183,11 +183,11 @@ export const initialCourses: Course[] = [
   },
   {
     id: 'course-6',
-    name: '高三多媒体创作实训',
-    description: '聚焦图像、音频与短视频制作的综合实训课程。',
-    grade: '高三',
+    name: '初三生物总复习',
+    description: '中考生物复习课程，系统梳理初中生物知识点。',
+    grade: '初三',
     class: '选修',
-    subject: '多媒体',
+    subject: '生物',
     teacherId: mockTeacher.id,
     teacherName: mockTeacher.realName,
     visibility: 'public',
@@ -195,11 +195,11 @@ export const initialCourses: Course[] = [
       {
         id: 'chapter-7',
         courseId: 'course-6',
-        title: '第1章 剪辑流程与镜头语言',
-        description: '掌握基础剪辑思路与镜头表达方式。',
+        title: '第1章 细胞与遗传',
+        description: '掌握细胞结构与遗传基础知识。',
         order: 1,
         resources: [
-          buildResource('res-9', 'chapter-7', '剪辑流程指南.mp4', 'video', 1024 * 1024 * 50, '/mock/files/media-editing.mp4'),
+          buildResource('res-9', 'chapter-7', '生物复习指南.pdf', 'pdf', 1024 * 1024 * 5, '/mock/files/biology-review.pdf'),
         ],
         createdAt: now,
       },
@@ -211,11 +211,11 @@ export const initialCourses: Course[] = [
   },
   {
     id: 'course-7',
-    name: '高一日语入门',
-    description: '日语假名、基础语法与日常会话入门课程。',
-    grade: '高一',
+    name: '初二历史拓展',
+    description: '中国近现代史拓展课程，培养历史思维能力。',
+    grade: '初二',
     class: '选修',
-    subject: '日语',
+    subject: '历史',
     teacherId: mockTeacher.id,
     teacherName: mockTeacher.realName,
     visibility: 'public',
@@ -223,11 +223,11 @@ export const initialCourses: Course[] = [
       {
         id: 'chapter-8',
         courseId: 'course-7',
-        title: '第1章 五十音与发音规则',
-        description: '学习平假名、片假名与基础发音。',
+        title: '第1章 中国近代史',
+        description: '学习中国近代史重要事件与人物。',
         order: 1,
         resources: [
-          buildResource('res-10', 'chapter-8', '五十音表练习.pdf', 'pdf', 1024 * 1024, '/mock/files/japanese-kana.pdf'),
+          buildResource('res-10', 'chapter-8', '历史拓展材料.pdf', 'pdf', 1024 * 1024, '/mock/files/history-extension.pdf'),
         ],
         createdAt: now,
       },

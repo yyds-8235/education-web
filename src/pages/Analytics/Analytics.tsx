@@ -20,63 +20,66 @@ const dimensionLabels: Record<Dimension, string> = {
 
 // 静态数据：初一到高三共6个年级
 const gradeData = [
-  { name: '初一', studentCount: 320, courseCompletion: 92, attendance: 96.4, abnormal: 3.6, avgScore: 85.2 },
-  { name: '初二', studentCount: 315, courseCompletion: 88, attendance: 95.2, abnormal: 4.8, avgScore: 82.5 },
-  { name: '初三', studentCount: 310, courseCompletion: 90, attendance: 94.5, abnormal: 5.5, avgScore: 87.3 },
-  { name: '高一', studentCount: 280, courseCompletion: 86, attendance: 93.8, abnormal: 6.2, avgScore: 80.1 },
-  { name: '高二', studentCount: 275, courseCompletion: 84, attendance: 92.5, abnormal: 7.5, avgScore: 78.9 },
-  { name: '高三', studentCount: 270, courseCompletion: 95, attendance: 97.2, abnormal: 2.8, avgScore: 91.5 },
+  { name: '初一', studentCount: 320, courseCompletion: 98.5, attendance: 99.2, abnormal: 0.8, avgScore: 92.5 },
+  { name: '初二', studentCount: 315, courseCompletion: 98.2, attendance: 98.8, abnormal: 1.2, avgScore: 91.8 },
+  { name: '初三', studentCount: 310, courseCompletion: 99.1, attendance: 99.5, abnormal: 0.5, avgScore: 94.2 },
+  { name: '高一', studentCount: 280, courseCompletion: 98.0, attendance: 98.5, abnormal: 1.5, avgScore: 91.2 },
+  { name: '高二', studentCount: 275, courseCompletion: 98.3, attendance: 98.7, abnormal: 1.3, avgScore: 92.0 },
+  { name: '高三', studentCount: 270, courseCompletion: 99.2, attendance: 99.6, abnormal: 0.4, avgScore: 94.5 },
 ];
 
 // 按学科统计的数据
 const subjectData = [
-  { name: '语文', studentCount: 1770, courseCompletion: 89, attendance: 95.1, abnormal: 4.9, avgScore: 84.5 },
-  { name: '数学', studentCount: 1770, courseCompletion: 87, attendance: 94.8, abnormal: 5.2, avgScore: 82.3 },
-  { name: '英语', studentCount: 1770, courseCompletion: 91, attendance: 95.5, abnormal: 4.5, avgScore: 86.1 },
-  { name: '物理', studentCount: 825, courseCompletion: 85, attendance: 93.2, abnormal: 6.8, avgScore: 79.8 },
-  { name: '化学', studentCount: 825, courseCompletion: 86, attendance: 93.5, abnormal: 6.5, avgScore: 80.5 },
-  { name: '生物', studentCount: 825, courseCompletion: 88, attendance: 94.1, abnormal: 5.9, avgScore: 83.2 },
+  { name: '语文', studentCount: 1770, courseCompletion: 98.6, attendance: 99.1, abnormal: 0.9, avgScore: 93.1 },
+  { name: '数学', studentCount: 1770, courseCompletion: 98.3, attendance: 98.9, abnormal: 1.1, avgScore: 92.4 },
+  { name: '英语', studentCount: 1770, courseCompletion: 99.0, attendance: 99.3, abnormal: 0.7, avgScore: 93.8 },
+  { name: '物理', studentCount: 825, courseCompletion: 98.0, attendance: 98.5, abnormal: 1.5, avgScore: 91.2 },
+  { name: '化学', studentCount: 825, courseCompletion: 98.7, attendance: 99.0, abnormal: 1.0, avgScore: 92.7 },
+  { name: '生物', studentCount: 825, courseCompletion: 98.9, attendance: 99.2, abnormal: 0.8, avgScore: 93.3 },
 ];
 
 // 按班级统计的数据（示例：每个年级3个班）
 const classData = [
-  { name: '初一1班', studentCount: 108, courseCompletion: 93, attendance: 97.1, abnormal: 2.9, avgScore: 86.5 },
-  { name: '初一2班', studentCount: 106, courseCompletion: 91, attendance: 96.2, abnormal: 3.8, avgScore: 84.8 },
-  { name: '初一3班', studentCount: 106, courseCompletion: 92, attendance: 95.9, abnormal: 4.1, avgScore: 84.3 },
-  { name: '初二1班', studentCount: 105, courseCompletion: 89, attendance: 95.8, abnormal: 4.2, avgScore: 83.2 },
-  { name: '初二2班', studentCount: 105, courseCompletion: 87, attendance: 94.9, abnormal: 5.1, avgScore: 82.1 },
-  { name: '初二3班', studentCount: 105, courseCompletion: 88, attendance: 94.9, abnormal: 5.1, avgScore: 82.2 },
+  { name: '初一1班', studentCount: 108, courseCompletion: 98.8, attendance: 99.3, abnormal: 0.7, avgScore: 93.5 },
+  { name: '初一2班', studentCount: 106, courseCompletion: 98.5, attendance: 99.0, abnormal: 1.0, avgScore: 92.8 },
+  { name: '初一3班', studentCount: 106, courseCompletion: 98.3, attendance: 98.7, abnormal: 1.3, avgScore: 92.2 },
+  { name: '初二1班', studentCount: 105, courseCompletion: 98.7, attendance: 99.1, abnormal: 0.9, avgScore: 93.0 },
+  { name: '初二2班', studentCount: 105, courseCompletion: 98.1, attendance: 98.6, abnormal: 1.4, avgScore: 91.5 },
+  { name: '初二3班', studentCount: 105, courseCompletion: 98.4, attendance: 98.8, abnormal: 1.2, avgScore: 92.3 },
+  { name: '高一1班', studentCount: 95, courseCompletion: 98.2, attendance: 98.7, abnormal: 1.3, avgScore: 91.8 },
+  { name: '高二1班', studentCount: 92, courseCompletion: 98.5, attendance: 99.0, abnormal: 1.0, avgScore: 92.5 },
+  { name: '高三1班', studentCount: 90, courseCompletion: 99.1, attendance: 99.5, abnormal: 0.5, avgScore: 94.0 },
 ];
 
 // 按教师统计的数据
 const teacherData = [
-  { name: '张老师', studentCount: 210, courseCompletion: 92, attendance: 96.5, abnormal: 3.5, avgScore: 87.2 },
-  { name: '李老师', studentCount: 205, courseCompletion: 89, attendance: 95.3, abnormal: 4.7, avgScore: 84.5 },
-  { name: '王老师', studentCount: 198, courseCompletion: 91, attendance: 96.1, abnormal: 3.9, avgScore: 86.3 },
-  { name: '刘老师', studentCount: 195, courseCompletion: 87, attendance: 94.2, abnormal: 5.8, avgScore: 82.8 },
-  { name: '陈老师', studentCount: 188, courseCompletion: 88, attendance: 94.8, abnormal: 5.2, avgScore: 83.6 },
-  { name: '赵老师', studentCount: 180, courseCompletion: 90, attendance: 95.6, abnormal: 4.4, avgScore: 85.1 },
+  { name: '张老师', studentCount: 210, courseCompletion: 98.9, attendance: 99.4, abnormal: 0.6, avgScore: 93.7 },
+  { name: '李老师', studentCount: 205, courseCompletion: 98.5, attendance: 99.0, abnormal: 1.0, avgScore: 92.8 },
+  { name: '王老师', studentCount: 198, courseCompletion: 98.8, attendance: 99.2, abnormal: 0.8, avgScore: 93.3 },
+  { name: '刘老师', studentCount: 195, courseCompletion: 98.2, attendance: 98.7, abnormal: 1.3, avgScore: 92.1 },
+  { name: '陈老师', studentCount: 188, courseCompletion: 98.6, attendance: 99.0, abnormal: 1.0, avgScore: 92.9 },
+  { name: '赵老师', studentCount: 180, courseCompletion: 98.7, attendance: 99.1, abnormal: 0.9, avgScore: 93.1 },
 ];
 
 // 趋势数据：根据不同周期
 const trendDataByPeriod = {
   week: {
     labels: ['周一', '周二', '周三', '周四', '周五'],
-    completion: [85, 86, 88, 90, 91],
-    attendance: [94, 95, 95.5, 96, 96.2],
-    score: [82.5, 83.2, 84.1, 85.0, 85.8],
+    completion: [98.0, 98.3, 98.7, 99.0, 99.2],
+    attendance: [98.5, 98.8, 99.1, 99.3, 99.5],
+    score: [91.2, 91.8, 92.5, 93.2, 93.8],
   },
   month: {
     labels: ['第1周', '第2周', '第3周', '第4周'],
-    completion: [83, 86, 89, 91],
-    attendance: [93.5, 94.8, 95.5, 96.2],
-    score: [81.2, 83.5, 84.8, 85.8],
+    completion: [98.0, 98.5, 98.9, 99.1],
+    attendance: [98.3, 98.8, 99.2, 99.5],
+    score: [90.5, 91.8, 92.9, 93.7],
   },
   term: {
     labels: ['9月', '10月', '11月', '12月', '1月'],
-    completion: [78, 82, 86, 89, 91],
-    attendance: [92, 93.5, 94.5, 95.5, 96.2],
-    score: [78.5, 81.2, 83.5, 84.8, 85.8],
+    completion: [98.0, 98.3, 98.7, 99.0, 99.2],
+    attendance: [98.2, 98.7, 99.1, 99.4, 99.6],
+    score: [90.0, 91.2, 92.5, 93.4, 94.0],
   },
 };
 
@@ -330,7 +333,7 @@ const Analytics = () => {
     return {
       completion: `${dimensionName}课程完成率分布`,
       attendance: `${dimensionName}考勤合格率`,
-      score: `${dimensionName}平均成绩`,
+      score: `${dimensionName}线上测试平均成绩`,
       trend: period === 'week' ? '教学管理趋势（本周）' : period === 'month' ? '教学管理趋势（本月）' : '教学管理趋势（本学期）',
     };
   }, [dimensions, period]);

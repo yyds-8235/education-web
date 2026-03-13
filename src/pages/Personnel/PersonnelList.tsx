@@ -17,6 +17,8 @@ import './PersonnelManagement.css';
 
 const { Paragraph, Text, Title } = Typography;
 
+const PAGE_SIZE = 8;
+
 interface PersonnelListProps {
   role: ManagedRole;
 }
@@ -26,40 +28,24 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
   const { user } = useAppSelector((state) => state.auth);
   const [messageApi, contextHolder] = message.useMessage();
   const [records, setRecords] = useState<ManagedUser[]>([]);
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 8, total: 0, totalPages: 0 });
+  // const [allRecords, setAllRecords] = useState<ManagedUser[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: PAGE_SIZE, total: 0, totalPages: 0 });
   const [keyword, setKeyword] = useState('');
   const [extraFilter, setExtraFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const meta = getPersonnelMeta(role);
 
-  const refreshList = async () => {
+  const refreshList = async (page = 1) => {
     setLoading(true);
     try {
       const result = await getPersonnelList(role);
-      setRecords(result.list);
-      setPagination({
-        page: result.page,
-        pageSize: result.pageSize,
-        total: result.total,
-        totalPages: result.totalPages,
-      });
-    } catch (error) {
-      const messageText = error instanceof Error ? error.message : `${meta.roleLabel}错误`;
-      messageApi.error(messageText);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void refreshList();
-  }, [role]);
-
-  const filteredRecords = useMemo(
-    () =>
-      records.filter((record) => {
+      const allData = result.list;
+      // setAllRecords(allData);
+      
+      const filtered = allData.filter((record) => {
         const text = `${record.username} ${record.real_name} ${record.email} ${record.phone}`.toLowerCase();
         const matchesKeyword = !keyword.trim() || text.includes(keyword.trim().toLowerCase());
         const matchesExtra =
@@ -70,17 +56,48 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
               : isTeacherRecord(record)
                 ? record.department === extraFilter
                 : true;
-
         return matchesKeyword && matchesExtra;
-      }),
-    [extraFilter, keyword, records],
-  );
+      });
+      
+      const total = filtered.length;
+      const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+      
+      const startIndex = (page - 1) * PAGE_SIZE;
+      const pagedRecords = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+      
+      setRecords(pagedRecords);
+      setPagination({
+        page,
+        pageSize: PAGE_SIZE,
+        total,
+        totalPages,
+      });
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : `${meta.roleLabel}错误`;
+      messageApi.error(messageText);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // ➌ 切换角色时重置页码和筛选条件
+    setCurrentPage(1);
+    setKeyword('');
+    setExtraFilter('all');
+    void refreshList(1);
+  }, [role]);
+
+  // 筛选条件变化时自动回到第 1 页
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [keyword, extraFilter]);
 
   const handleDelete = async (id: string) => {
     try {
       await deletePersonnel(role, id);
       messageApi.success(`${meta.roleLabel}已删除`);
-      await refreshList();
+      await refreshList(currentPage);
     } catch (error) {
       const messageText = error instanceof Error ? error.message : `删除${meta.roleLabel}失败`;
       messageApi.error(messageText);
@@ -96,7 +113,8 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
         const result = await importPersonnel(role, file as File);
         const summary = `成功导入 ${result.importedCount} 名${meta.roleLabel}${result.skippedCount ? `，跳过 ${result.skippedCount} 条` : ''}`;
         messageApi.success(summary);
-        await refreshList();
+        await refreshList(1);
+        setCurrentPage(1);
       } catch (error) {
         const messageText = error instanceof Error ? error.message : `导入${meta.roleLabel}失败`;
         messageApi.error(messageText);
@@ -300,16 +318,22 @@ const PersonnelList = ({ role }: PersonnelListProps) => {
           rowKey="id"
           loading={loading}
           columns={columns}
-          dataSource={filteredRecords}
+          dataSource={records}
           onRow={(record) => ({
             onClick: () => navigate(`${meta.listPath}/${record.id}`),
             style: { cursor: 'pointer' },
           })}
           pagination={{
-            current: pagination.page,
-            pageSize: pagination.pageSize,
-            total: filteredRecords.length,
+            current: currentPage,
+            pageSize: PAGE_SIZE,
+            total: pagination.total,
             showSizeChanger: false,
+            showQuickJumper: pagination.total > PAGE_SIZE * 3,
+            showTotal: (total) => `共 ${total} 名${meta.roleLabel}`,
+            onChange: (page) => {
+              setCurrentPage(page);
+              void refreshList(page);
+            },
           }}
           scroll={{ x: 1280 }}
         />

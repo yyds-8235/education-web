@@ -49,17 +49,17 @@ type TestRecord = {
 };
 
 const mockCourseData: CourseRecord[] = [
-  { courseId: '1', courseName: '高等数学', subject: '数学', teacherName: '张老师', progress: 85, testCount: 5, completedTestCount: 4, averageScore: 88.5, status: 'active' },
-  { courseId: '2', courseName: '大学英语', subject: '英语', teacherName: '李老师', progress: 92, testCount: 6, completedTestCount: 6, averageScore: 91.2, status: 'active' },
-  { courseId: '3', courseName: '计算机基础', subject: '计算机', teacherName: '王老师', progress: 78, testCount: 4, completedTestCount: 3, averageScore: 82.0, status: 'active' },
-  { courseId: '4', courseName: '大学物理', subject: '物理', teacherName: '刘老师', progress: 65, testCount: 5, completedTestCount: 3, averageScore: 75.5, status: 'paused' },
+  { courseId: '1', courseName: '初二语文基础', subject: '语文', teacherName: '张老师', progress: 98.5, testCount: 5, completedTestCount: 5, averageScore: 92.5, status: 'active' },
+  { courseId: '2', courseName: '初二数学进阶', subject: '数学', teacherName: '李老师', progress: 99.0, testCount: 6, completedTestCount: 6, averageScore: 93.2, status: 'active' },
+  { courseId: '3', courseName: '初二英语冲刺', subject: '英语', teacherName: '王老师', progress: 98.2, testCount: 4, completedTestCount: 4, averageScore: 91.8, status: 'active' },
+  { courseId: '4', courseName: '初二物理入门', subject: '物理', teacherName: '刘老师', progress: 98.8, testCount: 5, completedTestCount: 5, averageScore: 92.0, status: 'active' },
 ];
 
 const mockTestData: TestRecord[] = [
-  { testId: '1', courseName: '高等数学', title: '第一章测验', totalScore: 100, studentScore: 92, submittedAt: '2026-03-01 10:30:00' },
-  { testId: '2', courseName: '大学英语', title: '阅读理解', totalScore: 100, studentScore: 95, submittedAt: '2026-03-02 16:45:00' },
-  { testId: '3', courseName: '计算机基础', title: '编程基础', totalScore: 100, studentScore: 78, submittedAt: '2026-03-03 11:00:00' },
-  { testId: '4', courseName: '大学物理', title: '力学测试', totalScore: 100, studentScore: 72, submittedAt: '2026-03-04 15:30:00' },
+  { testId: '1', courseName: '初二语文基础', title: '现代文阅读测验', totalScore: 100, studentScore: 93, submittedAt: '2026-03-01 10:30:00' },
+  { testId: '2', courseName: '初二数学进阶', title: '一次函数单元测试', totalScore: 100, studentScore: 96, submittedAt: '2026-03-02 16:45:00' },
+  { testId: '3', courseName: '初二英语冲刺', title: '时态专项练习', totalScore: 100, studentScore: 91, submittedAt: '2026-03-03 11:00:00' },
+  { testId: '4', courseName: '初二物理入门', title: '力学基础测试', totalScore: 100, studentScore: 92, submittedAt: '2026-03-04 15:30:00' },
 ];
 
 const StudentDetail = () => {

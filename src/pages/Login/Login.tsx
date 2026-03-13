@@ -11,7 +11,7 @@ const { Paragraph, Text, Title } = Typography;
 
 const demoAccounts = [
   { label: '教师账号', username: 'tch0001', password: '123456', description: '用于课程、测试与批改管理' },
-  { label: '学生账号', username: 'stu10001', password: '123456', description: '用于学习、测试与成绩查询' },
+  { label: '学生账号', username: 'stu10024', password: '123456', description: '用于学习、测试与成绩查询' },
 ];
 
 const featureList = [

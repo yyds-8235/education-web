@@ -190,8 +190,16 @@ const toTeacherPayload = (values: PersonnelFormValues) => ({
 const toPersonnelPayload = (role: ManagedRole, values: PersonnelFormValues) =>
   role === 'student' ? toStudentPayload(values) : toTeacherPayload(values);
 
-export const getPersonnelList = async (role: ManagedRole): Promise<PersonnelListResult> => {
-  const response = await request.get(getResourcePath(role));
+export const getPersonnelList = async (
+  role: ManagedRole,
+  page?: number,
+  pageSize?: number
+): Promise<PersonnelListResult> => {
+  const params: Record<string, unknown> = {};
+  if (page !== undefined) params.page = page;
+  if (pageSize !== undefined) params.pageSize = pageSize;
+
+  const response = await request.get(getResourcePath(role), { params });
   return extractListResult(role, response.data.data);
 };
 

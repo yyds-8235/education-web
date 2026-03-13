@@ -61,6 +61,18 @@ const TestSubmissionReview = () => {
     return map;
   }, [currentTest]);
 
+  const sortedAnswers = useMemo(() => {
+    if (!submission?.answers || !currentTest?.questions) {
+      return [];
+    }
+    const sortedQuestions = [...currentTest.questions].sort((a, b) => {
+      const numA = parseInt(a.id.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.id.replace(/\D/g, ''), 10);
+      return numA - numB;
+    });
+    return sortedQuestions.map((q) => submission.answers.find((a) => a.questionId === q.id)).filter(Boolean);
+  }, [submission?.answers, currentTest?.questions]);
+
   const isReadonly = submission?.status === 'graded';
 
   const handleSubmitGrade = async () => {
@@ -136,7 +148,8 @@ const TestSubmissionReview = () => {
         </Card>
 
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
-          {submission.answers.map((answer) => {
+          {sortedAnswers.map((answer) => {
+            if (!answer) return null;
             const question = questionMap.get(answer.questionId);
             if (!question) {
               return null;

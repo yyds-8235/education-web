@@ -64,6 +64,19 @@ const studentNamePool = [
     '罗俊熙',
     '梁语桐',
     '谢承泽',
+    '孙雨晴',
+    '李明轩',
+    '王芳菲',
+    '张伟军',
+    '刘思语',
+    '周浩宇',
+    '黄雨欣',
+    '吴静雨',
+    '郑军浩',
+    '何燕萍',
+    '曾超群',
+    '罗雨晗',
+    '曾敏俊',
 ];
 
 const totalAttendanceRecords = studentNamePool.length * 2;
@@ -88,17 +101,45 @@ const exceptionNotes: Partial<Record<AttendanceType, string>> = {
 };
 
 const buildAttendanceRecord = (studentIndex: number, recordIndex: number): AttendanceRecord => {
+    const studentName = studentNamePool[studentIndex];
+    let grade: string;
+    let className: string;
+    
+    if (studentIndex >= 20) {
+        grade = '初二';
+        className = '2班';
+    } else {
+        grade = gradePool[studentIndex % gradePool.length];
+        className = classPool[Math.floor(studentIndex / gradePool.length) % classPool.length];
+    }
+    
     const sequence = studentIndex * 2 + recordIndex;
-    const type = specialAttendanceTypeMap.get(sequence) ?? 'present';
-    const grade = gradePool[studentIndex % gradePool.length];
-    const className = classPool[Math.floor(studentIndex / gradePool.length) % classPool.length];
+    let type: AttendanceType = 'present';
+    
+    const juniorTwoClassTwoNonPresent: { name: string; status: AttendanceType }[] = [
+        { name: '孙雨晴', status: 'late' },
+        { name: '李明轩', status: 'early_leave' },
+        { name: '王芳菲', status: 'absent' },
+        { name: '张伟军', status: 'leave' },
+        { name: '刘思语', status: 'late' },
+    ];
+    
+    const isJuniorTwoClassTwo = grade === '初二' && className === '2班';
+    const nonPresentStudent = juniorTwoClassTwoNonPresent.find(s => s.name === studentName);
+    
+    if (isJuniorTwoClassTwo && recordIndex === 1 && nonPresentStudent) {
+        type = nonPresentStudent.status;
+    } else if (specialAttendanceTypeMap.has(sequence)) {
+        type = specialAttendanceTypeMap.get(sequence) ?? 'present';
+    }
+    
     const date = dayjs('2026-03-01').add(recordIndex, 'day');
     const studentId = `student-${studentIndex + 1}`;
 
     const record: AttendanceRecord = {
         id: `att-${sequence + 1}`,
         studentId,
-        studentName: studentNamePool[studentIndex],
+        studentName,
         studentNo: `S2026${String(studentIndex + 1).padStart(4, '0')}`,
         grade,
         class: className,
@@ -142,6 +183,7 @@ const Attendance = () => {
         '2026-03-01 07:50 已完成考勤机批量同步（设备：A楼101、B楼203）',
     ]);
     const [traceLogs, setTraceLogs] = useState<string[]>([
+        '2026-03-01 09:30 标注异常：王芳菲（旷课）- 未到校且未提前请假',
         '2026-03-01 09:30 标注异常：李思远（旷课）- 未到校且未提前请假',
     ]);
     const [reportType, setReportType] = useState<AttendanceReportType>('class');

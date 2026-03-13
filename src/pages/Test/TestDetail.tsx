@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { useEffect, useMemo } from 'react';
+﻿﻿﻿﻿﻿﻿﻿﻿﻿import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Card, Empty, Space, Spin, Tag, Typography, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -23,6 +23,17 @@ const TestDetail = () => {
 
   const testId = (location.state?.testId ?? location.state?.test?.id) as string | undefined;
   const submissionId = (location.state?.submissionId ?? location.state?.submission?.id) as string | undefined;
+
+  const sortedQuestions = useMemo(() => {
+    if (!currentTest?.questions) {
+      return [];
+    }
+    return [...currentTest.questions].sort((a, b) => {
+      const numA = parseInt(a.id.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.id.replace(/\D/g, ''), 10);
+      return numA - numB;
+    });
+  }, [currentTest?.questions]);
 
   useEffect(() => {
     if (!testId) {
@@ -91,7 +102,7 @@ const TestDetail = () => {
             <Text type="secondary">总分：{currentTest.totalScore}</Text>
           </Space>
           {currentTest.description && <Paragraph type="secondary">{currentTest.description}</Paragraph>}
-          {submission && (
+          {user?.role === 'student' && submission && (
             <Space wrap>
               <Text>我的得分：{submission.totalScore ?? '-'}</Text>
               <Text>提交状态：{submission.status === 'graded' ? '已批改' : '待批改'}</Text>
@@ -102,7 +113,7 @@ const TestDetail = () => {
       </Card>
 
       <Space direction="vertical" size={16} style={{ width: '100%', marginTop: 16 }}>
-        {currentTest.questions.map((question, index) => {
+        {sortedQuestions.map((question, index) => {
           const answer = submission?.answers.find((item) => item.questionId === question.id);
 
           return (
@@ -116,10 +127,10 @@ const TestDetail = () => {
                     ))}
                   </Space>
                 )}
-                {submission && <Text>学生答案：{answer?.answer || '未作答'}</Text>}
+                {user?.role === 'student' && submission && <Text>学生答案：{answer?.answer || '未作答'}</Text>}
                 {(currentTest.showAnswer || user?.role === 'teacher') && <Text>参考答案：{question.answer || '暂无'}</Text>}
-                {typeof answer?.score === 'number' && <Text>得分：{answer.score}</Text>}
-                {answer?.feedback && <Text type="secondary">教师反馈：{answer.feedback}</Text>}
+                {user?.role === 'student' && typeof answer?.score === 'number' && <Text>得分：{answer.score}</Text>}
+                {user?.role === 'student' && answer?.feedback && <Text type="secondary">教师反馈：{answer.feedback}</Text>}
                 {question.analysis && <Text type="secondary">解析：{question.analysis}</Text>}
               </Space>
             </Card>

@@ -1,4 +1,4 @@
-﻿﻿import type { ReactNode } from 'react';
+﻿﻿﻿﻿import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Layout, Menu } from 'antd';
 import {
@@ -31,7 +31,7 @@ const menuItems: MenuItem[] = [
   {
     key: '/',
     icon: <DashboardOutlined />,
-    label: '工作台',
+    label: '首页',
     roles: ['teacher', 'student', 'admin'],
   },
   {

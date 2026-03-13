@@ -32,7 +32,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:8082', // 后端服务实际地址
+        target: 'http://10.1.1.100:8082', // 后端服务实际地址
         changeOrigin: true
       }
     }

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿import { useEffect, useMemo } from 'react';
+﻿﻿import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Card, Empty, Space, Spin, Tag, Typography, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -28,11 +28,7 @@ const TestDetail = () => {
     if (!currentTest?.questions) {
       return [];
     }
-    return [...currentTest.questions].sort((a, b) => {
-      const numA = parseInt(a.id.replace(/\D/g, ''), 10);
-      const numB = parseInt(b.id.replace(/\D/g, ''), 10);
-      return numA - numB;
-    });
+    return [...currentTest.questions].sort((a, b) => a.order - b.order);
   }, [currentTest?.questions]);
 
   useEffect(() => {
@@ -54,7 +50,7 @@ const TestDetail = () => {
     if (submissionId) {
       return currentTest.submissions.find((item) => item.id === submissionId) ?? currentSubmission;
     }
-
+    console.log(currentTest);
     return currentSubmission;
   }, [currentSubmission, currentTest, submissionId]);
 

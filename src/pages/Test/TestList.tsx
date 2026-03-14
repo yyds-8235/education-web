@@ -274,7 +274,9 @@ const TestList = () => {
                     <Tag color={item.submission.status === 'graded' ? 'green' : 'blue'}>
                       {item.submission.status === 'graded' ? '已批改' : '待批改'}
                     </Tag>
-                    <Text>得分：{item.submission.totalScore ?? '-'}</Text>
+                    {item.submission.status === 'graded' && (
+                      <Text>得分：{item.submission.totalScore ?? '-'}</Text>
+                    )}
                     {item.submission.appealStatus && (
                       <Tag color="orange">申诉状态：{appealStatusTextMap[item.submission.appealStatus]}</Tag>
                     )}
